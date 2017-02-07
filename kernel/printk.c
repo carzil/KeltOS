@@ -20,10 +20,10 @@ void puts(const char* str)
     }
 }
 
-void printu32(unsigned int a)
+void printu32(u32 a)
 {
     char buf[12];
-    unsigned int i;
+    u32 i;
 
     if (a == 0) {
         putc('0');

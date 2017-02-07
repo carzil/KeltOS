@@ -1,7 +1,9 @@
 #ifndef _KELT_KERNEL_PRINTK_H_
 #define _KELT_KERNEL_PRINTK_H_
 
-void printu32(unsigned int a);
+#include "types.h"
+
+void printu32(u32 a);
 void putc(char c);
 void puts(const char* str);
 
