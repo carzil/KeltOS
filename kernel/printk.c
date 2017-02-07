@@ -1,4 +1,4 @@
-#include "printk.h"
+#include "kernel/printk.h"
 
 #define SERIAL_BASE 0x16000000
 #define SERIAL_FLAG_REGISTER 0x18
@@ -11,12 +11,6 @@ void putc(char c)
                                        & (SERIAL_BUFFER_FULL));
     /* Put our character, c, into the serial buffer */
     *(volatile unsigned long*)SERIAL_BASE = c;
- 
-    /* Print a carriage return if this is a newline, as the cursor's x position will not reset to 0*/
-    if (c == '\n')
-    {
-        putc('\r');
-    }
 }
  
 void puts(const char* str)
@@ -26,10 +20,15 @@ void puts(const char* str)
     }
 }
 
-void printu32(int a)
+void printu32(unsigned int a)
 {
     char buf[12];
-    int i;
+    unsigned int i;
+
+    if (a == 0) {
+        putc('0');
+        return;
+    }
     for (i = 10; a > 0; i--) {
         buf[i] = (a % 10) + '0';
         a /= 10;
@@ -37,3 +36,4 @@ void printu32(int a)
     buf[11] = '\0';
     puts(buf + i + 1);
 }
+

@@ -1,21 +1,10 @@
-ARM_PREFIX=arm-none-eabi-
-CC=$(ARM_PREFIX)gcc
-LD=$(ARM_PREFIX)ld
-COMMON_FLAGS=-Wall -Wextra -nostdlib -nostartfiles
-CC_FLAGS=$(COMMON_FLAGS) -std=gnu99 -ffreestanding
-ASM_FLAGS=$(COMMON_FLAGS)
+-include Makefile.vars
 
-kernel: printk start irq main
-	$(LD) -T link.ld -o kernel.bin printk.o start.o irq.o main.o
-
-start: start.S
-	$(CC) -c $(ASM_FLAGS) $< -o $@.o
-
-irq: irq.S
-	$(CC) -c $(ASM_FLAGS) $< -o $@.o
-
-printk: printk.c
-	$(CC) -c $(CC_FLAGS) $< -o $@.o
-
-main: main.c
-	$(CC) -c $(CC_FLAGS) $< -o $@.o
+build:
+	make -C sched
+	make -C kernel
+	$(CC) -c $(ASM_FLAGS) start.S -o start.o
+	$(CC) -c $(CC_FLAGS) main.c -o main.o
+	$(LD) -T link.ld -o kernel.bin sched/sched.o kernel/kernel.o start.o main.o
+	$(OBJCOPY) --only-keep-debug kernel.bin kernel.sym
+	$(OBJCOPY) --strip-debug kernel.bin
