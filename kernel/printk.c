@@ -1,19 +1,15 @@
 #include "kernel/printk.h"
+#include "kernel/types.h"
 
-#define SERIAL_BASE 0x16000000
-#define SERIAL_FLAG_REGISTER 0x18
-#define SERIAL_BUFFER_FULL (1 << 5)
+#define UART0_BASE 0x4000c000
  
-void putc(char c)
+void putc(u32 ch)
 {
-    /* Wait until the serial buffer is empty */
-    while (*(volatile unsigned long*)(SERIAL_BASE + SERIAL_FLAG_REGISTER) 
-                                       & (SERIAL_BUFFER_FULL));
-    /* Put our character, c, into the serial buffer */
-    *(volatile unsigned long*)SERIAL_BASE = c;
+    while ((*(volatile u32*)UART0_BASE) & 7);
+    *(volatile u32*)UART0_BASE = ch;
 }
  
-void puts(const char* str)
+void puts(const u8* str)
 {
     while (*str) {
         putc(*str++);
@@ -22,7 +18,7 @@ void puts(const char* str)
 
 void printu32(u32 a)
 {
-    char buf[12];
+    u8 buf[12];
     u32 i;
 
     if (a == 0) {

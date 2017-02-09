@@ -4,7 +4,6 @@
 
 int kmain(void)
 {
-    set_exception_handler(EXC_SWINT, &_swi_handler);
     asm ("swi #0");
     asm ("swi #0");
     asm ("swi #0");

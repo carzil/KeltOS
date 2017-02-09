@@ -4,7 +4,7 @@
 #include "types.h"
 
 void printu32(u32 a);
-void putc(char c);
-void puts(const char* str);
+void putc(u32 c);
+void puts(const u8* str);
 
 #endif

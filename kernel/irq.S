@@ -1,6 +1,6 @@
 .globl _swi_handler
+.type _swi_handler, %function
 _swi_handler:
-    push    {lr}
-    bl      swi_handler
-    pop     {lr}
-    mov     pc, r14
+    bl       swi_handler
+    bx       r0
+
