@@ -7,6 +7,7 @@ MEMORY {
 
 SECTIONS {
     .text : {
+        start_asm.o(.text);
         *(.text);
     } > FLASH
 

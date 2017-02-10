@@ -1,0 +1,38 @@
+ARM_PREFIX=arm-none-eabi-
+CC=$(ARM_PREFIX)gcc
+LD=$(ARM_PREFIX)ld
+AR=$(ARM_PREFIX)ar
+OBJCOPY=$(ARM_PREFIX)objcopy
+INCLUDE_DIR=$(PROJECT_ROOT)/include
+COMMON_FLAGS=-Wall -Wextra -nostdlib -nostartfiles -mcpu=cortex-m4 -mthumb -g
+CC_FLAGS=$(COMMON_FLAGS) -std=gnu99 -ffreestanding -I$(INCLUDE_DIR)
+ASM_FLAGS=$(COMMON_FLAGS)
+LD_FLAGS=
+
+C_SOURCES=$(wildcard *.c)
+C_OBJS=$(C_SOURCES:.c=.o)
+ASM_SOURCES=$(wildcard *.S)
+ASM_OBJS=$(ASM_SOURCES:.S=_asm.o)
+SUBSYSTEMS_OBJS=$(foreach s,$(SUBSYSTEMS),$s/$s.o)
+
+build: $(OUTPUT)
+
+%.o: %.c
+	@echo "    CC $<"
+	@$(CC) -c $(CC_FLAGS) $< -o $@
+
+%_asm.o: %.S
+	@echo "    AS $<"
+	@$(CC) -c $(ASM_FLAGS) $< -o $@
+
+$(SUBSYSTEMS):
+	@$(MAKE) -C $@ $(MAKECMDGOALS)
+
+$(OUTPUT): $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS)
+	@$(LD) -r $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS) -o $@
+	@echo "    LD $@"
+
+clean: $(SUBSYSTEMS) clean_extra
+	rm -rf *.o
+
+.PHONY: build clean $(SUBSYSTEMS) clean_extra
