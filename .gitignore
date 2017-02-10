@@ -1,3 +1,7 @@
 *.o
 *.bin
 *.sym
+*.a
+*.elf
+*.sym
+
