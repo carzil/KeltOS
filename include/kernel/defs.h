@@ -2,8 +2,7 @@
 #define _KELT_KERNEL_DEFS_H_
 
 /*
- * This headers is can be also included in assembly file.
- * Don't write any C code here!
+ * This headers can be also included in assembly file. Don't write any C code here!
  */
 
 #define STACK_SIZE      0x2000
