@@ -1,24 +1,31 @@
 #include "kernel/printk.h"
 #include "kernel/types.h"
+#include "kernel/defs.h"
+#include "kernel/semihosting.h"
 
-#define UART0_BASE 0x4000c000
- 
-void putc(u32 ch)
+void putc(char ch)
 {
-    while ((*(volatile u32*)UART0_BASE) & 7);
-    *(volatile u32*)UART0_BASE = ch;
+    char c[3];
+    c[0] = ch;
+    asm (
+        "mov r0, #0x03\n"
+        "mov r1, %0\n"
+        "bkpt 0xab\n"
+        :
+        : "r"(c)
+        : "r0", "r1"
+    );
+
 }
  
-void puts(const u8* str)
+void puts(const char* str)
 {
-    while (*str) {
-        putc(*str++);
-    }
+    smhost_printz(str);
 }
 
 void printu32(u32 a)
 {
-    u8 buf[12];
+    char buf[12];
     u32 i;
 
     if (a == 0) {

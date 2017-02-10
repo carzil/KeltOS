@@ -1,7 +1,9 @@
+#include "kernel/defs.h"
+
 .syntax unified
 .text
 int_vec:
-    .word stack+0x1000 @ intial sp value
+    .word SRAM_BASE+STACK_SIZE-0x4 @ intial sp value
     .word _start        @ reset address
     .word 0             @ NMI
     .word 0             @ Hard Faul
@@ -12,7 +14,7 @@ int_vec:
     .word 0             @ To
     .word 0             @ 10 
     .word 0             @ Reserved
-    .word _swi_handler  @ SVC_Handler
+    .word 0             @ SVC_Handler
     .word 0             @ DebugMon_Handler
     .word 0             @ Reserved
     .word 0             @ PendSV_Handler
@@ -23,9 +25,7 @@ int_vec:
 .globl _start
 .type _start, %function
 _start:
-    b      kmain
+    b       kmain
 
 _hang:
     b _hang
-
-.comm stack, 0x1000
