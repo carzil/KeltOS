@@ -3,10 +3,10 @@
 .syntax unified
 .text
 int_vec:
-    .word SRAM_BASE+STACK_SIZE-0x4 @ intial sp value
-    .word _start        @ reset address
+    .word STACK_END-0x4 @ intial sp value
+    .word kmain         @ reset address
     .word 0             @ NMI
-    .word 0             @ Hard Faul
+    .word 0             @ Hard Fault
     .word 0             @ Memory Fault
     .word 0             @ Bus Fault
     .word 0             @ Usage Fault
@@ -14,18 +14,10 @@ int_vec:
     .word 0             @ To
     .word 0             @ 10 
     .word 0             @ Reserved
-    .word 0             @ SVC_Handler
+    .word _swi_handler
     .word 0             @ DebugMon_Handler
     .word 0             @ Reserved
     .word 0             @ PendSV_Handler
-    .word 0             @ SysTick_Handler
+    .word _systick_handler
     .word 0             @ IRQ_Handler
     .word 0             @ IRQ_Handler
-
-.globl _start
-.type _start, %function
-_start:
-    b       kmain
-
-_hang:
-    b _hang
