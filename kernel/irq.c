@@ -2,8 +2,7 @@
 #include "kernel/printk.h"
 #include "sched/cpu.h"
 
-int swi_handler()
+u32 swi_handler()
 {
-    putc('s');
     return 0xFFFFFFF1;
 }
