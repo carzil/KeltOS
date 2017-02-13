@@ -41,8 +41,3 @@ u32 smhost_printz(const char* buf)
 {
     return smhost_gateway(SMHOST_WRITE0, (void*)buf);
 }
-
-void init_semihosting()
-{
-    smhost_stdout = smhost_open(":tt", 3, SMHOST_W);
-}
