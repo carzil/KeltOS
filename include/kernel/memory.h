@@ -3,8 +3,6 @@
 
 #include "kernel/types.h"
 
-extern void* data_brk;
-
 extern void* _rodata_lma;
 extern void* _rodata_vma;
 extern void* _rodata_sz;
@@ -14,6 +12,9 @@ extern void* _data_sz;
 extern void* _bss_vma;
 extern void* _bss_sz;
 extern void* _data_brk;
+
+#define data_brk ((void*)(&_data_brk))
+#define NULL ((void*)0)
 
 void* kmemcpy(void* dst, const void* src, u32 sz);
 

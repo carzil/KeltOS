@@ -4,9 +4,15 @@
 #include "kernel/defs.h"
 #include "kernel/memory.h"
 
-extern u32 _edata;
+/*
+ * This is implementation of malloc-like memory allocator.
+ * Chunks stored with data in that format:
+ * |...chunk_header...|...data...|...chunk_size (u32)...|
+ * chunk_size stored for left chunk O(1) lookup.
+ * Data size is always divisible by 4, so chunk_headers always are word-aligned.
+ */
 
-#define NULL ((void*)0)
+#define MM_RIGHT_BOUNDARY ((void*)(SRAM_BASE + SRAM_SIZE - STACK_SIZE))
 
 struct chunk {
     u32 size;
@@ -20,6 +26,10 @@ static struct chunk* head_chunk = NULL;
 
 struct chunk* chunk_left(void* chunk)
 {
+    if (chunk == data_brk) {
+        /* leftmost chunk */
+        return NULL;
+    }
     chunk -= sizeof(u32);
     chunk -= *(u32*)chunk;
     chunk -= sizeof(struct chunk);
@@ -31,6 +41,9 @@ struct chunk* chunk_right(void* chunk)
     chunk += ((struct chunk*)chunk)->size;
     chunk += sizeof(struct chunk);
     chunk += sizeof(u32);
+    if (chunk >= MM_RIGHT_BOUNDARY) {
+        return NULL;
+    }
     return chunk;
 }
 
@@ -40,13 +53,17 @@ void chunk_set_size(struct chunk* chunk, u32 size)
     *(u32*)(chunk->data + size) = size;
 }
 
+/*
+ * Memory manager initialization routine.
+ */
 void mm_init()
 {
     u32 size;
 
     head_chunk = data_brk;
     head_chunk->flags = CHUNK_FREE;
-    size = SRAM_SIZE - STACK_SIZE - sizeof(struct chunk) - sizeof(u32);
+    /* heap is located in the middle of SRAM */
+    size = SRAM_SIZE - STACK_SIZE - sizeof(struct chunk) - sizeof(u32) - ((u32)data_brk - SRAM_BASE);
     head_chunk->next = NULL;
     head_chunk->size = size;
     chunk_set_size(head_chunk, size);
@@ -60,12 +77,10 @@ struct chunk* chunk_split(struct chunk* ptr, u32 size)
     struct chunk* new_chunk;
 
     ptr->size -= sizeof(struct chunk) + size + sizeof(u32);
+    /* place new_chunk right after of ptr */
     new_chunk = ((void*)ptr) + sizeof(struct chunk) + ptr->size + sizeof(u32);
     new_chunk->size = size;
     new_chunk->flags = ptr->flags;
-    new_chunk->next = ptr->next;
-
-    ptr->next = new_chunk;
     chunk_set_size(ptr, ptr->size);
     chunk_set_size(new_chunk, new_chunk->size);
     return new_chunk;
@@ -80,17 +95,23 @@ void chunk_merge(struct chunk* left, struct chunk* right)
 void* kalloc(u32 size)
 {
     struct chunk* ptr;
-    struct chunk* new_chunk;
+    struct chunk* prev;
+    struct chunk* alloc_chunk;
+    u32 alloc_chunk_size;
 
     if (size & 3) {
         /* align up size to 4 bytes */
         size += 4 - (size & 3);
     }
+    /* TODO: disable all irqs and suspend scheduler here */
 
-    // TODO: disable all irqs and suspend scheduler here
-
+    /* Ensure we have enough size to allocate chunk_header */
+    alloc_chunk_size = size + sizeof(struct chunk) + sizeof(u32);
+    prev = NULL;
     ptr = head_chunk;
-    while (ptr && ptr->size < size) {
+    /* Find first chunk that can be split in two or it's size exatcly matches size */
+    while (ptr && ptr->size < alloc_chunk_size && ptr->size < size) {
+        prev = ptr;
         ptr = ptr->next;
     }
 
@@ -98,13 +119,21 @@ void* kalloc(u32 size)
         /* we haven't found any suitable chunk */
         return NULL;
     }
-
-    new_chunk = chunk_split(ptr, size);
-    /* delete chunk from free list */
-    ptr->next = new_chunk->next;
-    new_chunk->next = NULL;
-    new_chunk->flags = CHUNK_USED;
-    return (void*)(new_chunk->data);
+    if (ptr->size < alloc_chunk_size) {
+        /* cannot split chunk, but there is enough space to allocate memory, use it */
+        alloc_chunk = ptr;
+        if (prev == NULL) {
+            head_chunk = head_chunk->next;
+        } else {
+            prev->next = ptr->next;
+        }
+    } else {
+        /* alloc_chunk is not inserted in free list */
+        alloc_chunk = chunk_split(ptr, size);
+    }
+    alloc_chunk->flags = CHUNK_USED;
+    alloc_chunk->next = NULL;
+    return (void*)(alloc_chunk->data);
 }
 
 void kfree(void* p)
@@ -117,7 +146,7 @@ void kfree(void* p)
     struct chunk* left = chunk_left(chunk);
     struct chunk* right = chunk_right(chunk);
 
-    if (left->flags & CHUNK_FREE) {
+    if (left != NULL && left->flags & CHUNK_FREE) {
         /* our chunk and chunk to the left are free, merge them */
         chunk_merge(left, chunk);
         /*
@@ -129,7 +158,7 @@ void kfree(void* p)
             left->next = right->next;
             chunk_merge(left, right);
         }
-    } else if (right->flags & CHUNK_FREE) {
+    } else if (right != NULL && right->flags & CHUNK_FREE) {
         /* right chunk isn't used, find place in free list for freed chunk */
         ptr = head_chunk;
         while (ptr && ptr->next != right) {
@@ -147,13 +176,18 @@ void kfree(void* p)
         chunk->flags = CHUNK_FREE;
     } else {
         /* both left and right chunks are used, just insert chunk */
-        ptr = head_chunk;
-        while (ptr->next != NULL && ptr->next < chunk) {
-            ptr = ptr->next;
-        }
+        if (head_chunk == NULL) {
+            head_chunk = chunk;
+            chunk->next = NULL;
+        } else {
+            ptr = head_chunk;
+            while (ptr->next != NULL && ptr->next < chunk) {
+                ptr = ptr->next;
+            }
 
-        chunk->next = ptr->next;
-        ptr->next = chunk;
+            chunk->next = ptr->next;
+            ptr->next = chunk;
+        }
         chunk->flags = CHUNK_FREE;
     }
 }
