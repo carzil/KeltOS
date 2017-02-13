@@ -1,14 +1,27 @@
 #include "kernel/printk.h"
 #include "kernel/irq.h"
+#include "kernel/timer.h"
 #include "kernel/alloc.h"
+#include "kernel/memory.h"
+#include "kernel/defs.h"
 #include "sched/cpu.h"
 
-int kmain(void)
+void load_sections()
 {
-    // u32* s = kalloc(10);
-    puts("HAHAHAHHA\n");
-    printk("Answer is %u.\nHa-ha. Just kidding. It's %u\n", 42, 4294967295);
-    printk("Let's visit %x, %x.\n", 0xcafe, 0xbabe);
-    printk("%d + %d = %d", -2147483647, 2147483647, -2147483647 + 2147483647);
-    return 0;
+    kmemcpy(&_data_vma, &_data_lma, (u32)&_data_sz);
+    kmemcpy(&_rodata_vma, &_rodata_lma, (u32)&_rodata_sz);
+    for (u32 i = 0; i < (u32)&_bss_sz; i++) {
+        *(u8*)(&_bss_vma + i) = 0;
+    }
+    data_brk = &_data_brk;
+}
+
+void kmain(void)
+{
+    load_sections();
+    timer_init();
+    mm_init();
+
+    while (1) {
+    }
 }
