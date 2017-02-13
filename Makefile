@@ -1,7 +1,7 @@
 export MAKEFILE_BUILD_PATH=$(realpath Makefile.build)
 export PROJECT_ROOT=$(realpath .)
 
-SUBSYSTEMS=sched kernel
+SUBSYSTEMS=sched kernel bluetooth
 
 all: build
 
