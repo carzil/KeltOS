@@ -9,13 +9,13 @@ all: build
 
 build: $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS)
 	@$(LD) -T link.ld $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS) -o kernel.elf
-	@echo "    LD kernel.elf"
+	@echo -e "    \033[1m\033[33m[LD] \033[37mkernel.elf\033[0m"
 	@$(OBJCOPY) --only-keep-debug kernel.elf kernel.sym
-	@echo "    OBJCOPY kernel.sym"
+	@echo -e "    \033[1m\033[32m[OBJCOPY] \033[37mkernel.sym\033[0m"
 	@$(OBJCOPY) --strip-debug -Obinary kernel.elf kernel.bin
-	@echo "    OBJCOPY kernel.bin"
+	@echo -e "    \033[1m\033[32m[OBJCOPY] \033[37mkernel.bin\033[0m"
 
 clean_extra:
-	rm -rf kernel.elf
-	rm -rf kernel.bin
-	rm -rf kernel.sym
+	@rm -rf kernel.elf
+	@rm -rf kernel.bin
+	@rm -rf kernel.sym

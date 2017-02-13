@@ -18,11 +18,11 @@ SUBSYSTEMS_OBJS=$(foreach s,$(SUBSYSTEMS),$s/$s.o)
 build: $(OUTPUT)
 
 %.o: %.c
-	@echo "    CC $<"
+	@echo -e "    \033[1m\033[34m[CC] \033[37m$<\033[0m"
 	@$(CC) -c $(CC_FLAGS) $< -o $@
 
 %_asm.o: %.S
-	@echo "    AS $<"
+	@echo -e "    \033[1m\033[35m[AS] \033[37m$<\033[0m"
 	@$(CC) -c $(ASM_FLAGS) $< -o $@
 
 $(SUBSYSTEMS):
@@ -30,9 +30,9 @@ $(SUBSYSTEMS):
 
 $(OUTPUT): $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS)
 	@$(LD) -r $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS) -o $@
-	@echo "    LD $@"
+	@echo -e "    \033[1m\033[33m[LD] \033[37m$@\033[0m"
 
 clean: $(SUBSYSTEMS) clean_extra
-	rm -rf *.o
+	@rm -rf *.o
 
 .PHONY: build clean $(SUBSYSTEMS) clean_extra
