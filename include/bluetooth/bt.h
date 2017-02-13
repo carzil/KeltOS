@@ -1,5 +1,5 @@
-#ifndef _KELT_KERNEL_BT_H
-#define _KELT_KERNEL_BT_H
+#ifndef _KELT_BLUETOOTH_BT_H
+#define _KELT_BLUETOOTH_BT_H
 
 int bt_init();
 
