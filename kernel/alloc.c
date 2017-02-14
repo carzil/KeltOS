@@ -3,6 +3,7 @@
 #include "kernel/printk.h"
 #include "kernel/defs.h"
 #include "kernel/memory.h"
+#include "kernel/bug.h"
 
 /*
  * This is implementation of malloc-like memory allocator.
@@ -103,6 +104,7 @@ void* kalloc(u32 size)
         /* align up size to 4 bytes */
         size += 4 - (size & 3);
     }
+
     /* TODO: disable all irqs and suspend scheduler here */
 
     /* Ensure we have enough size to allocate chunk_header */
@@ -119,6 +121,7 @@ void* kalloc(u32 size)
         /* we haven't found any suitable chunk */
         return NULL;
     }
+
     if (ptr->size < alloc_chunk_size) {
         /* cannot split chunk, but there is enough space to allocate memory, use it */
         alloc_chunk = ptr;
@@ -165,10 +168,8 @@ void kfree(void* p)
             ptr = ptr->next;
         }
 
-        if (ptr == NULL) {
-            /* oops */
-            return;
-        }
+        BUG_ON_NULL(ptr);
+
         /* insert new chunk, delete right chunk and merge */
         ptr->next = chunk;
         chunk->next = right->next;
