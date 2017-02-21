@@ -1,4 +1,4 @@
-# What is KeltOS?
+# What is KeltOS? [![Build Status](https://travis-ci.org/carzil/KeltOS.svg?branch=master)](https://travis-ci.org/carzil/KeltOS)
 KeltOS is very simple ARM realtime operating system.
 
 # How to build it?
