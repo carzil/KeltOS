@@ -1,0 +1,11 @@
+dist: trusty
+language: c
+
+addons:
+  apt:
+    packages:
+      - gcc-arm-none-eabi
+
+script:
+  - arm-none-eabi-gcc --version
+  - make
