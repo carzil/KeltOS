@@ -13,7 +13,6 @@ void load_sections()
     for (u32 i = 0; i < (u32)&_bss_sz; i++) {
         *(u8*)(&_bss_vma + i) = 0;
     }
-    data_brk = &_data_brk;
 }
 
 void kmain(void)
