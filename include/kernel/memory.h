@@ -14,7 +14,6 @@ extern void* _bss_sz;
 extern void* _data_brk;
 
 #define data_brk ((void*)(&_data_brk))
-#define NULL ((void*)0)
 
 void* kmemcpy(void* dst, const void* src, u32 sz);
 

@@ -4,7 +4,7 @@
 #include "kernel/defs.h"
 #include "kernel/semihosting.h"
 
-enum { MAX_LEN_U32 = 10, MAX_LEN_S32 = 11, MAX_LEN_XU32 = 8 };
+enum { MAX_LEN_U32 = 10, MAX_LEN_S32 = 11, MAX_LEN_PTR = 10, MAX_LEN_XU32 = 8 };
 static const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
 void putc(char ch)
@@ -55,6 +55,24 @@ size_t bprints32(char* buf, s32 a, int base) {
     return bprintu32(buf, a, base);
 }
 
+size_t bprintstr(char* buf, const char* str) {
+    const char* cur = str;
+    size_t length = 0;
+    while (*cur) {
+        buf[length++] = *(cur++);
+    }
+    return length;
+}
+
+size_t bprintptr(char* buf, void* ptr) {
+    size_t bytes;
+    if (ptr == NULL) {
+        return bprintstr(buf, "(nil)");
+    }
+    bytes = bprintstr(buf, "0x");
+    return bytes + bprintu32(buf + bytes, (u32) ptr, 16); 
+}
+
 void printu32(u32 a)
 {
     char buf[MAX_LEN_U32 + 1];
@@ -79,6 +97,9 @@ size_t __max_length(const char* fmt) {
             case 'd':
                 length += MAX_LEN_S32;
                 break;
+            case 'p':
+                length += MAX_LEN_PTR;
+                break;
             default:
                 break;
             }
@@ -99,6 +120,7 @@ void printk(const char* fmt, ...) {
     va_list args;
     u32 u32value;
     s32 s32value;
+    void* ptrvalue;
     char buf[__max_length(fmt)];
     char* b_cursor = buf;
 
@@ -123,6 +145,10 @@ void printk(const char* fmt, ...) {
             case 'd':
                 s32value = va_arg(args, s32);
                 b_cursor += bprints32(b_cursor, s32value, 10);
+                break;
+            case 'p':
+                ptrvalue = va_arg(args, void*);
+                b_cursor += bprintptr(b_cursor, ptrvalue);
                 break;
             default:
                 break;
