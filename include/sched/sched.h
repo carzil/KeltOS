@@ -54,6 +54,3 @@ struct task* sched_switch_task();
 #define sched_context_switch() if (sched_enabled) { NVIC_INT_CTRL_REG |= NVIC_PENDSV_SET_BIT; }
 
 #endif
-
-/* sp_top: 0x2001cffc, ctx: 0x2001dfbc, exc_ctx: 0x2001dfdc
-sp_top: 0x2001bfec, ctx: 0x2001cfac, exc_ctx: 0x2001cfcc */
