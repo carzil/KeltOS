@@ -29,7 +29,7 @@ $(SUBSYSTEMS):
 	@$(MAKE) -C $@ $(MAKECMDGOALS)
 
 $(OUTPUT): $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS)
-	@$(LD) -r $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS) -o $@
+	@$(LD) $(LD_FLAGS) -r $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS) -o $@
 	@echo -e "    \033[1m\033[33m[LD] \033[37m$@\033[0m"
 
 clean: $(SUBSYSTEMS) clean_extra

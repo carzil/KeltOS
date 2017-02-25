@@ -8,7 +8,7 @@ all: build
 -include $(MAKEFILE_BUILD_PATH)
 
 build: $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS)
-	@$(LD) -T link.ld $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS) -o kernel.elf
+	@$(LD) $(LD_FLAGS) -T link.ld $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS) -o kernel.elf
 	@echo -e "    \033[1m\033[33m[LD] \033[37mkernel.elf\033[0m"
 	@$(OBJCOPY) --only-keep-debug kernel.elf kernel.sym
 	@echo -e "    \033[1m\033[32m[OBJCOPY] \033[37mkernel.sym\033[0m"
