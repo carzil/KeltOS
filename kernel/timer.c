@@ -1,17 +1,22 @@
 #include "kernel/timer.h"
+#include "sched/sched.h"
+#include "kernel/irq.h"
 
 u32 c_tick = 0;
 
-u32 systick_handler()
+void NAKED systick_handler()
 {
     c_tick++;
-    return 0xFFFFFFF1;
+    if (sched_enabled && (c_tick % 100) == 0) {
+        sched_context_switch();
+    }
+    EXCEPTION_RETURN_DEFAULT();
 }
 
 void timer_init()
 {
     c_tick = 0;
-    /* Enable SysTick and its interruption */
+    /* Enable SysTick and its interrupts */
     *(volatile u32*)SYSTICK_CSR = SYSTICK_ENABLE | SYSTICK_INT;
     /*
      * By default SysTick operates on the same frequency as the processor.

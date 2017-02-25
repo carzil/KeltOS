@@ -14,6 +14,7 @@ typedef signed long long s64;
 typedef unsigned int size_t;
 
 #define NULL ((void*)0)
+#define NAKED __attribute__((naked))
 
 #endif
 

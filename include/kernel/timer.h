@@ -14,7 +14,7 @@
 
 extern u32 c_tick;
 
-u32 systick_handler();
+void systick_handler();
 void timer_init();
 
 #endif

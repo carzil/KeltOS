@@ -1,7 +1,7 @@
 #include "kernel/defs.h"
 
-.syntax unified
-.text
+    .syntax unified
+    .text
 int_vec:
     .word STACK_END-0x4 @ intial sp value
     .word kmain         @ reset address
@@ -14,10 +14,10 @@ int_vec:
     .word 0             @ To
     .word 0             @ 10 
     .word 0             @ Reserved
-    .word _swi_handler
+    .word swi_handler
     .word 0             @ DebugMon_Handler
     .word 0             @ Reserved
-    .word 0             @ PendSV_Handler
-    .word _systick_handler
+    .word pendsv_handler
+    .word systick_handler
     .word 0             @ IRQ_Handler
     .word 0             @ IRQ_Handler
