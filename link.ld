@@ -10,25 +10,25 @@ SECTIONS {
     .text ORIGIN(FLASH) :
     {
         start_asm.o(.text);
-        *(.text);
+        *(.text*);
     }
 
     .rodata ORIGIN(SRAM) :
         AT(ALIGN(LOADADDR(.text) + SIZEOF(.text), 4))
     {
-        *(.rodata);
+        *(.rodata*);
     }
 
     .data ALIGN(ADDR(.rodata) + SIZEOF(.rodata), 4) : 
         AT(ALIGN(LOADADDR(.rodata) + SIZEOF(.rodata), 4))
     {
-        *(.data)
+        *(.data*);
     }
 
     .bss ALIGN(ADDR(.data) + SIZEOF(.data), 4) :
         AT(ALIGN(LOADADDR(.data) + SIZEOF(.data), 4))
     {
-        *(.bss)
+        *(.bss*);
     }
 
     _rodata_lma = LOADADDR(.rodata);
