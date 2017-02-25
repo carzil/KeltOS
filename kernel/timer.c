@@ -2,7 +2,7 @@
 #include "sched/sched.h"
 #include "kernel/irq.h"
 
-u32 c_tick = 0;
+volatile u32 c_tick = 0;
 
 void NAKED systick_handler()
 {

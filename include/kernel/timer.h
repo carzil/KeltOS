@@ -12,7 +12,7 @@
 #define SYSTICK_INT         0x2
 
 
-extern u32 c_tick;
+extern volatile u32 c_tick;
 
 void systick_handler();
 void timer_init();
