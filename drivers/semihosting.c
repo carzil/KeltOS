@@ -1,4 +1,4 @@
-#include "kernel/semihosting.h"
+#include "drivers/semihosting.h"
 
 int smhost_stdout;
 

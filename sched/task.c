@@ -5,17 +5,24 @@
 #include "kernel/bug.h"
 #include "drivers/nvic.h"
 #include "kernel/timer.h"
+#include "kernel/syscall.h"
+#include "kernel/irq.h"
 
 int sched_enabled = 0;
 struct task tasks[MAX_TASKS];
-struct task* c_task;
+struct task* c_task = NULL;
 
-struct task* sched_start_task(void* start_address)
+LIST_HEAD_DEFINE(high_priotity_list);
+LIST_HEAD_DEFINE(normal_priotity_list);
+LIST_HEAD_DEFINE(low_priotity_list);
+
+struct task* sched_start_task(void* start_address, int priority)
 {
     struct task* task = NULL;
     for (u32 i = 0; i < MAX_TASKS; i++) {
         if (tasks[i].pid == 0) {
             task = tasks + i;
+            task->pid = i + 1;
             break;
         }
     }
@@ -38,32 +45,59 @@ struct task* sched_start_task(void* start_address)
         exc_ctx->pc = ((u32)start_address) & ~(u32)0x1;
         exc_ctx->psr = DEFAULT_PSR;
 
-        printk("sp_top: %p, ctx: %p, exc_ctx: %p\n", sp_top, ctx, exc_ctx);
         task->sp = sp;
-        task->flags = TASK_RUNNING;
-        task->pid = 1;
+        task->flags = TASK_RUNNING | priority;
+
+        switch (priority) {
+        case PRIORITY_HIGH:
+            list_insert_last(&high_priotity_list, &task->lnode);
+            break;
+        case PRIORITY_NORMAL:
+            list_insert_last(&normal_priotity_list, &task->lnode);
+            break;
+        case PRIORITY_LOW:
+            list_insert_last(&low_priotity_list, &task->lnode);
+            break;
+        }
     }
     return task;
 }
 
 struct task* sched_switch_task()
 {
-    for (u32 i = 0; i < MAX_TASKS; i++) {
-        if (tasks[i].flags & TASK_RUNNING) {
-            if (tasks + i != c_task) {
-                c_task = tasks + i;
-                return c_task;
-            }
-        }
+    c_task = NULL;
+    if (!list_empty(&high_priotity_list)) {
+        c_task = list_first_entry(high_priotity_list, struct task, lnode);
+        list_rotate_left(&high_priotity_list);
+    } else if (!list_empty(&normal_priotity_list)) {
+        c_task = list_first_entry(normal_priotity_list, struct task, lnode);
+        list_rotate_left(&normal_priotity_list);
+    } else if (!list_empty(&low_priotity_list)) {
+        c_task = list_first_entry(low_priotity_list, struct task, lnode);
+        list_rotate_left(&low_priotity_list);
     }
-    return NULL;
+
+    return c_task;
 }
 
 void sched_start()
 {
-    asm (
-        "mov    r0, #0\n"
-        "swi    #32\n"
+    sched_enabled = 1;
 
-    );
+    struct task* task = sched_switch_task();
+    volatile struct task_context_exc* ctx = task->sp + sizeof(struct task_context);
+    /* task has no internal state yet, so register values are not important: 
+     * psr can hold actual value of pc. +1 for setting T-bit */
+    ctx->psr = ctx->pc + 1;
+    sched_switch_in(task);
+}
+
+void sys_exit(struct sys_params* params)
+{
+    BUG_ON_NULL(c_task);
+    list_delete(&c_task->lnode);
+    c_task->pid = 0;
+
+    struct task* task = sched_switch_task();
+    sched_return_to(task);
 }

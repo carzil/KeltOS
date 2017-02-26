@@ -3,7 +3,9 @@
 
 #include "kernel/defs.h"
 #include "kernel/types.h"
+#include "kernel/list.h"
 #include "drivers/nvic.h"
+#include "kernel/syscall.h"
 
 #define MAX_TASKS           16
 #define TASK_RUNNING        0x1
@@ -13,9 +15,15 @@
 
 struct task {
     void* sp;
+
     u32 pid;
+    /*
+     * bits 0-2: task state (running, blocked etc)
+     * bits 3-4: task priority
+     */
     u32 flags;
     
+    struct list_node lnode;
 };
 
 /* saved task context on exception entry */
@@ -49,9 +57,14 @@ extern struct task tasks[MAX_TASKS];
 
 extern void context_switch(struct task* from, struct task* to);
 
-struct task* sched_start_task(void* start_address);
+struct task* sched_start_task(void* start_address, int priority);
 void sched_start();
 struct task* sched_switch_task();
+void sys_exit(struct sys_params* params);
+
+void sys_sched_start(struct sys_params* params);
+void sched_return_to(struct task* task);
+void sched_switch_in(struct task* task);
 #define sched_context_switch() if (sched_enabled) { NVIC_INT_CTRL_REG |= NVIC_PENDSV_SET_BIT; }
 
 #endif
