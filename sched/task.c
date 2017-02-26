@@ -12,9 +12,9 @@ int sched_enabled = 0;
 struct task tasks[MAX_TASKS];
 struct task* c_task = NULL;
 
-LIST_HEAD_DEFINE(high_priotity_list);
-LIST_HEAD_DEFINE(normal_priotity_list);
-LIST_HEAD_DEFINE(low_priotity_list);
+LIST_HEAD_DEFINE(high_priority_list);
+LIST_HEAD_DEFINE(normal_priority_list);
+LIST_HEAD_DEFINE(low_priority_list);
 
 struct task* sched_start_task(void* start_address, int priority)
 {
@@ -50,13 +50,13 @@ struct task* sched_start_task(void* start_address, int priority)
 
         switch (priority) {
         case PRIORITY_HIGH:
-            list_insert_last(&high_priotity_list, &task->lnode);
+            list_insert_last(&high_priority_list, &task->lnode);
             break;
         case PRIORITY_NORMAL:
-            list_insert_last(&normal_priotity_list, &task->lnode);
+            list_insert_last(&normal_priority_list, &task->lnode);
             break;
         case PRIORITY_LOW:
-            list_insert_last(&low_priotity_list, &task->lnode);
+            list_insert_last(&low_priority_list, &task->lnode);
             break;
         }
     }
@@ -66,15 +66,15 @@ struct task* sched_start_task(void* start_address, int priority)
 struct task* sched_switch_task()
 {
     c_task = NULL;
-    if (!list_empty(&high_priotity_list)) {
-        c_task = list_first_entry(high_priotity_list, struct task, lnode);
-        list_rotate_left(&high_priotity_list);
-    } else if (!list_empty(&normal_priotity_list)) {
-        c_task = list_first_entry(normal_priotity_list, struct task, lnode);
-        list_rotate_left(&normal_priotity_list);
-    } else if (!list_empty(&low_priotity_list)) {
-        c_task = list_first_entry(low_priotity_list, struct task, lnode);
-        list_rotate_left(&low_priotity_list);
+    if (!list_empty(&high_priority_list)) {
+        c_task = list_first_entry(high_priority_list, struct task, lnode);
+        list_rotate_left(&high_priority_list);
+    } else if (!list_empty(&normal_priority_list)) {
+        c_task = list_first_entry(normal_priority_list, struct task, lnode);
+        list_rotate_left(&normal_priority_list);
+    } else if (!list_empty(&low_priority_list)) {
+        c_task = list_first_entry(low_priority_list, struct task, lnode);
+        list_rotate_left(&low_priority_list);
     }
 
     return c_task;
