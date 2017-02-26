@@ -1,6 +1,4 @@
-#include "kernel/defs.h"
-
-    .syntax unified
+#include "kernel/defs_asm.h"
 
 /* r0 should contain task pointer */
 .macro RESTORE_CONTEXT
@@ -19,9 +17,7 @@
 .endm
 
 /* PendSV is used by KeltOS for context switching. */
-    .globl pendsv_handler
-    .type pendsv_handler, %function
-pendsv_handler:
+FUNCTION(pendsv_handler):
     ldr     r0, =c_task
     ldr     r0, [r0]
 
@@ -35,16 +31,12 @@ pendsv_handler:
     mov     lr, #0xfffffffd
     bx      lr
 
-    .globl sched_return_to
-    .type sched_return_to, %function
-sched_return_to:
+FUNCTION(sched_return_to):
     RESTORE_CONTEXT
     mov     lr, #0xfffffffd
     bx      lr    
 
-    .globl sched_switch_in
-    .type sched_switch_in, %function
-sched_switch_in:
+FUNCTION(sched_switch_in):
     RESTORE_CONTEXT
 
     /* switch to process stack */
