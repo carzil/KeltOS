@@ -5,10 +5,11 @@
 #include "kernel/types.h"
 #include "drivers/nvic.h"
 
-#define MAX_TASKS       16
-#define TASK_RUNNING    0x1
-#define TASK_STACK_SIZE 0x1000
-#define DEFAULT_PSR     0x01000000
+#define MAX_TASKS           16
+#define TASK_RUNNING        0x1
+#define PRIORITY_HIGH       0x12
+#define PRIORITY_NORMAL     0x8
+#define PRIORITY_LOW        0x4
 
 struct task {
     void* sp;
