@@ -7,21 +7,6 @@
 enum { MAX_LEN_U32 = 10, MAX_LEN_S32 = 11, MAX_LEN_PTR = 10, MAX_LEN_XU32 = 8 };
 static const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
-void putc(char ch)
-{
-    char c[3];
-    c[0] = ch;
-    asm (
-        "mov r0, #0x03\n"
-        "mov r1, %0\n"
-        "bkpt 0xab\n"
-        :
-        : "r"(c)
-        : "r0", "r1"
-    );
-
-}
- 
 void puts(const char* str)
 {
     smhost_printz(str);
