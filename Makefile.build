@@ -23,7 +23,7 @@ build: $(OUTPUT)
 
 %_asm.o: %.S
 	@echo -e "    \033[1m\033[35m[AS] \033[37m$<\033[0m"
-	$(CC) -c $(ASM_FLAGS) $< -o $@
+	@$(CC) -c $(ASM_FLAGS) $< -o $@
 
 $(SUBSYSTEMS):
 	@$(MAKE) -C $@ $(MAKECMDGOALS)
