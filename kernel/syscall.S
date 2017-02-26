@@ -2,4 +2,4 @@
     .type swi_handler, %function
 swi_handler:
     mrs     r0, psp
-    b       syscall_handler
+    bl      syscall_handler
