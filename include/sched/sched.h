@@ -7,11 +7,13 @@
 #include "drivers/nvic.h"
 #include "kernel/syscall.h"
 
-#define MAX_TASKS           16
-#define TASK_RUNNING        0x1
-#define PRIORITY_HIGH       0x12
-#define PRIORITY_NORMAL     0x8
-#define PRIORITY_LOW        0x4
+enum {
+    MAX_TASKS       = 16,
+    TASK_RUNNING    = 0x1,
+    PRIORITY_HIGH   = 0x12,
+    PRIORITY_NORMAL = 0x8,
+    PRIORITY_LOW    = 0x4
+};
 
 struct task {
     void* sp;

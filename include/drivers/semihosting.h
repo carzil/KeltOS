@@ -2,11 +2,12 @@
 #define _KELT_KERNEL_SEMIHOSTING_H_
 
 #include "kernel/types.h"
-
-#define SMHOST_OPEN   0x01
-#define SMHOST_WRITE  0x05
-#define SMHOST_WRITE0 0x04
-#define SMHOST_W      0x4
+enum {
+    SMHOST_OPEN   = 0x01,
+    SMHOST_WRITE  = 0x05,
+    SMHOST_WRITE0 = 0x04,
+    SMHOST_W      = 0x4
+};
 
 extern int smhost_stdout;
 

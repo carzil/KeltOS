@@ -3,7 +3,7 @@
 
 #include "kernel/types.h"
 
-#define SYSCALL_COUNT 1
+enum { SYSCALL_COUNT = 1 };
 
 struct sys_params {
     /* params passed in registers: r0, r1, r2, r3, r12, r14 */

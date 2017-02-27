@@ -4,7 +4,7 @@
 #include "sched/cpu.h"
 #include "kernel/types.h"
 
-#define TICK_RATE_HZ        100
+enum { TICK_RATE_HZ = 100 };
 
 extern volatile u32 c_tick;
 
