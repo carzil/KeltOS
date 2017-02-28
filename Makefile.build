@@ -4,7 +4,7 @@ LD=$(ARM_PREFIX)ld
 AR=$(ARM_PREFIX)ar
 OBJCOPY=$(ARM_PREFIX)objcopy
 INCLUDE_DIR=$(PROJECT_ROOT)/include
-COMMON_FLAGS=-Wall -Wextra -nostdlib -nostartfiles -mcpu=cortex-m4 -mthumb -g -I$(INCLUDE_DIR)
+COMMON_FLAGS=-Wall -Wextra -nostdlib -nostartfiles -mcpu=cortex-m4 -mthumb -Wa,-mimplicit-it=thumb -g -I$(INCLUDE_DIR)
 CC_FLAGS=$(COMMON_FLAGS) -std=gnu99 -ffreestanding
 ASM_FLAGS=$(COMMON_FLAGS)
 LD_FLAGS=
