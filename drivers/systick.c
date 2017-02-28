@@ -6,10 +6,12 @@
 
 void NAKED systick_handler()
 {
+    irq_disable();
     c_tick++;
     if (sched_enabled && (c_tick % 100) == 0) {
         sched_context_switch();
     }
+    irq_enable();
     EXCEPTION_RETURN_DEFAULT();
 }
 

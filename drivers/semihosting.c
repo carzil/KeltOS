@@ -1,4 +1,5 @@
 #include "drivers/semihosting.h"
+#include "kernel/irq.h"
 
 int smhost_stdout;
 
@@ -39,5 +40,8 @@ u32 smhost_print(void* buf, u32 size)
 
 u32 smhost_printz(const char* buf)
 {
-    return smhost_gateway(SMHOST_WRITE0, (void*)buf);
+    irq_disable();
+    s32 res = smhost_gateway(SMHOST_WRITE0, (void*)buf);
+    irq_enable();
+    return res;
 }
