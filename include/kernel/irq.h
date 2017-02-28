@@ -8,7 +8,7 @@
 
 extern void _handler_trampoline();
 
-#define EXCEPTION_RETURN(code) asm("mov lr, %0\nbx lr\n" : : "r"(code) : );
+#define EXCEPTION_RETURN(code) asm("bx %0" : : "r"(code) : );
 #define EXCEPTION_RETURN_DEFAULT() asm("bx lr");
 
 enum {
@@ -17,5 +17,8 @@ enum {
     ARM_PROCESS_STACK = 0xfffffff5,
     ARM_MAIN_STACK    = 0xfffffff1
 };
+
+#define irq_enable() asm("cpsie f")
+#define irq_disable() asm("cpsid f")
 
 #endif
