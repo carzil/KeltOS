@@ -3,7 +3,8 @@
 
 #include "kernel/types.h"
 
-enum { SYSCALL_COUNT = 1 };
+enum { SYSCALL_COUNT = 2 };
+
 
 struct sys_params {
     /* params passed in registers: r0, r1, r2, r3, r12, r14 */
@@ -19,7 +20,8 @@ struct sys_params {
     u32 xpsr;
 };
 
+typedef void (*syscall_handler_t)(struct sys_params*);
+
 void swi_handler();
-void syscall_handler(struct sys_params* params);
 
 #endif

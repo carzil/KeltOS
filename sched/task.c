@@ -16,6 +16,23 @@ LIST_HEAD_DEFINE(high_priority_list);
 LIST_HEAD_DEFINE(normal_priority_list);
 LIST_HEAD_DEFINE(low_priority_list);
 
+/* TODO: current realization lacks synchoronization */
+
+static void sched_insert_task(struct task* task)
+{
+    switch (task->priority) {
+    case PRIORITY_HIGH:
+        list_insert_last(&high_priority_list, &task->lnode);
+        break;
+    case PRIORITY_NORMAL:
+        list_insert_last(&normal_priority_list, &task->lnode);
+        break;
+    case PRIORITY_LOW:
+        list_insert_last(&low_priority_list, &task->lnode);
+        break;
+    }
+}
+
 struct task* sched_start_task(void* start_address, int priority)
 {
     struct task* task = NULL;
@@ -46,19 +63,10 @@ struct task* sched_start_task(void* start_address, int priority)
         exc_ctx->psr = DEFAULT_PSR;
 
         task->sp = sp;
-        task->flags = TASK_RUNNING | priority;
+        task->priority = priority;
+        task->state = TASK_RUNNING;
 
-        switch (priority) {
-        case PRIORITY_HIGH:
-            list_insert_last(&high_priority_list, &task->lnode);
-            break;
-        case PRIORITY_NORMAL:
-            list_insert_last(&normal_priority_list, &task->lnode);
-            break;
-        case PRIORITY_LOW:
-            list_insert_last(&low_priority_list, &task->lnode);
-            break;
-        }
+        sched_insert_task(task);
     }
     return task;
 }
@@ -92,12 +100,30 @@ void sched_start()
     sched_switch_in(task);
 }
 
+void sched_task_set_sleeping(struct task* task)
+{
+    list_delete(&task->lnode);
+    task->state = TASK_SLEEPING;
+}
+
+void sched_task_wake_up(struct task* task)
+{
+    if (task->state == TASK_SLEEPING) {
+        task->state = TASK_RUNNING;
+        sched_insert_task(task);
+    }
+}
+
 void sys_exit(struct sys_params* params)
 {
     BUG_ON_NULL(c_task);
     list_delete(&c_task->lnode);
     c_task->pid = 0;
+    sched_context_switch();
+}
 
-    struct task* task = sched_switch_task();
-    sched_return_to(task);
+void sys_yield(struct sys_params* params)
+{
+    BUG_ON_NULL(c_task);
+    sched_context_switch();
 }

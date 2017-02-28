@@ -2,11 +2,7 @@
 #include "kernel/irq.h"
 #include "sched/sched.h"
 
-void (*syscall_table[SYSCALL_COUNT])(struct sys_params* params) = {
-    sys_exit
+syscall_handler_t syscall_table[SYSCALL_COUNT] = {
+    sys_exit,
+    sys_yield
 };
-
-void syscall_handler(struct sys_params* params)
-{
-    syscall_table[params->sys_number](params);
-}

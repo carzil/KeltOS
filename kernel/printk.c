@@ -2,14 +2,29 @@
 #include "kernel/printk.h"
 #include "kernel/types.h"
 #include "kernel/defs.h"
+#include "kernel/spinlock.h"
+#include "sched/sched.h"
 #include "drivers/semihosting.h"
+#include "kernel/timer.h"
 
 enum { MAX_LEN_U32 = 10, MAX_LEN_S32 = 11, MAX_LEN_PTR = 10, MAX_LEN_XU32 = 8 };
 static const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
-void puts(const char* str)
+static char kring_buffer[RING_BUFFER_SIZE] = { 0 };
+static size_t kring_pos = 0;
+struct spinlock kring_buffer_lock;
+
+struct task* _dump_task = NULL;
+
+void log_buffer_put(const char* str)
 {
-    smhost_printz(str);
+    spinlock_lock(&kring_buffer_lock);
+    for (; *str != '\0'; str++) {
+        kring_buffer[kring_pos] = *str;
+        kring_pos = (kring_pos + 1) & (RING_BUFFER_SIZE - 1);
+    }
+    spinlock_unlock(&kring_buffer_lock);
+    sched_task_wake_up(_dump_task);
 }
 
 size_t bprintu32(char* buf, u32 a, int base) {
@@ -63,7 +78,7 @@ void printu32(u32 a)
     char buf[MAX_LEN_U32 + 1];
     size_t bytes = bprintu32(buf, a, 10);
     buf[bytes] = '\0';
-    puts(buf);
+    log_buffer_put(buf);
 }
 
 size_t __max_length(const char* fmt) {
@@ -145,6 +160,35 @@ void printk(const char* fmt, ...) {
     va_end(args);
     
     *b_cursor = '\0';
-    puts(buf);
+    log_buffer_put(buf);
 }
 
+void dump_kernel_log_task()
+{
+    size_t kring_pos_last = 0;
+    for (;;) {
+        spinlock_lock(&kring_buffer_lock);
+        if (kring_pos_last != kring_pos) {
+            if (kring_pos < kring_pos_last) {
+                /* buffer overflow happened */
+                smhost_print(kring_buffer + kring_pos_last, RING_BUFFER_SIZE - kring_pos_last);
+                smhost_print(kring_buffer, kring_pos);
+            } else {
+                smhost_print(kring_buffer + kring_pos_last, kring_pos - kring_pos_last);
+            }
+            kring_pos_last = kring_pos;
+        }
+        spinlock_unlock(&kring_buffer_lock);
+        sched_task_set_sleeping(_dump_task);
+        asm (
+            "mov    r0, #1\n"
+            "swi    #32"
+        );
+    }
+}
+
+void printk_init()
+{
+    _dump_task = sched_start_task(&dump_kernel_log_task, PRIORITY_HIGH);
+    _dump_task->name = "kernel_dump_log";
+}

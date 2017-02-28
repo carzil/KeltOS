@@ -3,9 +3,8 @@
 
 #include "types.h"
 
-void printu32(u32 a);
-void putc(char c);
-void puts(const char* str);
 void printk(const char* fmt, ...);
+void dump_kernel_log_task();
+void printk_init();
 
 #endif

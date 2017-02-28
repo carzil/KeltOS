@@ -4,9 +4,11 @@
 #include "kernel/alloc.h"
 #include "kernel/memory.h"
 #include "kernel/defs.h"
+#include "kernel/spinlock.h"
 #include "sched/cpu.h"
 #include "sched/sched.h"
 #include "drivers/systick.h"
+#include "drivers/semihosting.h"
 
 void load_sections()
 {
@@ -16,6 +18,8 @@ void load_sections()
         *(u8*)(&_bss_vma + i) = 0;
     }
 }
+
+struct spinlock spl;
 
 void taska()
 {
@@ -29,38 +33,16 @@ void taska()
     }
 }
 
-void taskb()
-{
-    u32 last_tick = 0;
-    int cnt = 0;
-    for (;;) {
-        if (c_tick != last_tick) {
-            printk("B %d\n", cnt--);
-            last_tick = c_tick;
-        }
-    }
-}
-
-void taskc()
-{
-    u32 last_tick = 0;
-    int cnt = 0;
-    for (;;) {
-        if (c_tick != last_tick) {
-            printk("CCC %d\n", cnt--);
-            last_tick = c_tick;
-        }
-    }
-}
-
 void taskd()
 {
     u32 last_tick = 0;
     int cnt = 0;
-    for (; cnt < 1000 ;) {
+    for (; cnt < 100000;) {
         if (c_tick != last_tick) {
+            // smhost_printz("task d\n");
             printk("DDD %d\n", cnt++);
             last_tick = c_tick;
+            cnt++;
         }
     }
     printk("Task D exit\n");
@@ -76,10 +58,13 @@ void kmain(void)
     mm_init();
     systick_init();
 
-    sched_start_task(&taska, PRIORITY_NORMAL);
-    sched_start_task(&taskb, PRIORITY_NORMAL);
-    sched_start_task(&taskc, PRIORITY_NORMAL);
-    sched_start_task(&taskd, PRIORITY_HIGH);
+    printk_init();
+    struct task* taska = sched_start_task(&taskd, PRIORITY_HIGH);
+    taska->name = "task D";
+    // sched_start_task(&taskb, PRIORITY_NORMAL);
+    // sched_start_task(&taskd, PRIORITY_NORMAL);
+    // sched_start_task(&taskc, PRIORITY_NORMAL);
+
 
     sched_start();
 }
