@@ -1,19 +1,18 @@
 #include "kernel/defs_asm.h"
 
-FUNCTION(swi_handler):
-    ldr     r0, =c_task
-    ldr     r0, [r0]
+    @ Parameters are passed in r0, r1, r2, r3
+FUNCTION(svc_handler):
+    stmfd   sp!, {r4-r12, lr}
 
-    SAVE_CONTEXT
+    @ svc instruction
+    ldr     r12, [lr, #-4]
 
-    push    {lr}
-    mrs     r0, psp
-    /* get sys_number: it is stored in r0 which saved by hardware */
-    ldr     r2, [r0, #0]
-    ldr     r1, =syscall_table
-    /* load syscall handler address */
-    ldr     r3, [r1, r2, lsl #2]
-    blx     r3
+    @ clear encoded instruction, r12 now holds syscall number
+    bic     r12, r12, #0xff000000
 
-    pop     {lr}
-    bx      lr
+    ldr     r11, =syscall_table
+    ldr     r11, [r11, r12, lsl #2]
+
+    blx     r11
+
+    ldmfd   sp!, {r4-r12, pc}^

@@ -1,13 +1,13 @@
 ARM_PREFIX=arm-none-eabi-
 CC=$(ARM_PREFIX)gcc
-LD=$(ARM_PREFIX)ld
+LD=$(ARM_PREFIX)gcc
 AR=$(ARM_PREFIX)ar
 OBJCOPY=$(ARM_PREFIX)objcopy
 INCLUDE_DIR=$(PROJECT_ROOT)/include
-COMMON_FLAGS=-Wall -Wextra -nostdlib -nostartfiles -mcpu=cortex-m4 -mthumb -Wa,-mimplicit-it=thumb -g -I$(INCLUDE_DIR)
-CC_FLAGS=$(COMMON_FLAGS) -std=gnu99 -ffreestanding
+COMMON_FLAGS=-Wall -Wextra -march=armv7-a -mtune=cortex-a8 -mfpu=neon -ftree-vectorize -ffast-math -mfloat-abi=softfp -g -I$(INCLUDE_DIR)
+CC_FLAGS=$(COMMON_FLAGS) -std=gnu99
 ASM_FLAGS=$(COMMON_FLAGS)
-LD_FLAGS=
+LD_FLAGS=-nostdlib -lgcc
 
 C_SOURCES=$(wildcard *.c)
 C_OBJS=$(C_SOURCES:.c=.o)
@@ -29,7 +29,7 @@ $(SUBSYSTEMS):
 	@$(MAKE) -C $@ $(MAKECMDGOALS)
 
 $(OUTPUT): $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS)
-	@$(LD) $(LD_FLAGS) -r $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS) -o $@
+	@$(LD) $(ASM_OBJS) $(C_OBJS) $(SUBSYSTEMS_OBJS) -o $@ -r $(LD_FLAGS) 
 	@echo -e "    \033[1m\033[33m[LD] \033[37m$@\033[0m"
 
 clean: $(SUBSYSTEMS) clean_extra

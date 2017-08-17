@@ -18,12 +18,14 @@ struct task* _dump_task = NULL;
 
 void log_buffer_put(const char* str)
 {
-    spinlock_lock(&kring_buffer_lock);
+    int flags;
+
+    spinlock_lock_irq(&kring_buffer_lock, &flags);
     for (; *str != '\0'; str++) {
         kring_buffer[kring_pos] = *str;
         kring_pos = (kring_pos + 1) & (RING_BUFFER_SIZE - 1);
     }
-    spinlock_unlock(&kring_buffer_lock);
+    spinlock_unlock_irq(&kring_buffer_lock, &flags);
     sched_task_wake_up(_dump_task);
 }
 
@@ -70,7 +72,7 @@ size_t bprintptr(char* buf, void* ptr) {
         return bprintstr(buf, "(nil)");
     }
     bytes = bprintstr(buf, "0x");
-    return bytes + bprintu32(buf + bytes, (u32) ptr, 16); 
+    return bytes + bprintu32(buf + bytes, (u32) ptr, 16);
 }
 
 void printu32(u32 a)
@@ -158,7 +160,7 @@ void printk(const char* fmt, ...) {
         ++cursor;
     }
     va_end(args);
-    
+
     *b_cursor = '\0';
     log_buffer_put(buf);
 }

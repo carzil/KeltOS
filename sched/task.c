@@ -3,7 +3,6 @@
 #include "kernel/memory.h"
 #include "kernel/printk.h"
 #include "kernel/bug.h"
-#include "drivers/nvic.h"
 #include "kernel/timer.h"
 #include "kernel/syscall.h"
 #include "kernel/irq.h"
@@ -53,14 +52,12 @@ struct task* sched_start_task(void* start_address, int priority)
         }
 
         void* sp = sp_top + TASK_STACK_SIZE;
-        struct task_context_exc* exc_ctx = sp - sizeof(struct task_context_exc);
-        struct task_context* ctx = sp - sizeof(struct task_context_exc) - sizeof(struct task_context);
+        struct task_context* ctx = sp - sizeof(struct task_context);
         /* prepare stack pointer for first context restore */
         sp = ctx;
 
         /* gcc produces addresses with non-zero last bit to set EPSR.T bit */
-        exc_ctx->pc = ((u32)start_address) & ~(u32)0x1;
-        exc_ctx->psr = DEFAULT_PSR;
+        ctx->lr = ((u32)start_address) & ~(u32)0x1;
 
         task->sp = sp;
         task->priority = priority;
@@ -73,6 +70,7 @@ struct task* sched_start_task(void* start_address, int priority)
 
 struct task* sched_switch_task()
 {
+    printk("switch task called %u\n", c_tick);
     c_task = NULL;
     if (!list_empty(&high_priority_list)) {
         c_task = list_first_entry(high_priority_list, struct task, lnode);
@@ -93,10 +91,6 @@ void sched_start()
     sched_enabled = 1;
 
     struct task* task = sched_switch_task();
-    volatile struct task_context_exc* ctx = task->sp + sizeof(struct task_context);
-    /* task has no internal state yet, so register values are not important: 
-     * psr can hold actual value of pc. +1 for setting T-bit */
-    ctx->psr = ctx->pc + 1;
     sched_switch_in(task);
 }
 
@@ -114,7 +108,7 @@ void sched_task_wake_up(struct task* task)
     }
 }
 
-void sys_exit(struct sys_params* params)
+void sys_exit()
 {
     BUG_ON_NULL(c_task);
     list_delete(&c_task->lnode);
@@ -122,7 +116,7 @@ void sys_exit(struct sys_params* params)
     sched_context_switch();
 }
 
-void sys_yield(struct sys_params* params)
+void sys_yield()
 {
     BUG_ON_NULL(c_task);
     sched_context_switch();

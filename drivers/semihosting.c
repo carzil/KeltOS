@@ -9,7 +9,7 @@ s32 smhost_gateway(u32 op, void* blk)
     asm (
         "mov    r0, %[op]\n"
         "mov    r1, %[blk]\n"
-        "bkpt   0xab\n"
+        "svc    #0x123456\n"
         "mov    %[res], r0"
         : [res]"=r"(res)
         : [op]"r"(op), [blk]"r"(blk)
@@ -40,8 +40,8 @@ u32 smhost_print(void* buf, u32 size)
 
 u32 smhost_printz(const char* buf)
 {
-    irq_disable();
+    // irq_disable();
     s32 res = smhost_gateway(SMHOST_WRITE0, (void*)buf);
-    irq_enable();
+    // irq_enable();
     return res;
 }

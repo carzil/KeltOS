@@ -6,22 +6,6 @@
 enum { SYSCALL_COUNT = 2 };
 
 
-struct sys_params {
-    /* params passed in registers: r0, r1, r2, r3, r12, r14 */
-    u32 sys_number;
-    u32 arg1;
-    u32 arg2;
-    u32 arg3;
-    u32 arg4;
-    u32 arg5;
-
-    /* this is not syscall params but required to find parameters location */
-    u32 ret_addr;
-    u32 xpsr;
-};
-
-typedef void (*syscall_handler_t)(struct sys_params*);
-
-void swi_handler();
+typedef void* syscall_handler_t;
 
 #endif

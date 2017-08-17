@@ -1,23 +1,20 @@
-#include "kernel/defs.h"
+#include "kernel/defs_asm.h"
 
     .syntax unified
     .text
 int_vec:
-    .word STACK_END-0x4 @ intial sp value
-    .word kmain         @ reset address
-    .word 0             @ NMI
-    .word 0             @ Hard Fault
-    .word 0             @ Memory Fault
-    .word 0             @ Bus Fault
-    .word 0             @ Usage Fault
-    .word 0             @ 7
-    .word 0             @ To
-    .word 0             @ 10 
-    .word 0             @ Reserved
-    .word swi_handler
-    .word 0             @ DebugMon_Handler
-    .word 0             @ Reserved
-    .word pendsv_handler
-    .word systick_handler
-    .word 0             @ IRQ_Handler
-    .word 0             @ IRQ_Handler
+    b       .           @ reset handler
+    b       .           @ undefined instruction
+    b       svc_handler
+    b       .           @ prefetch abort
+    b       .           @ data abort
+    b       .           @ not used
+    b       _irq_handler
+    b       .           @ fiq handler
+
+.comm stack, STACK_SIZE
+.comm irq_stack, IRQ_STACK_SIZE
+
+FUNCTION(_start):
+    ldr     sp, =stack+STACK_SIZE
+    bl      kmain

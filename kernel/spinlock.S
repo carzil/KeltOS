@@ -6,7 +6,7 @@
 FUNCTION(spinlock_lock):
     mov     r1, #LOCKED
 .try_lock:
-    /* r0 contains pointer to spinlock */
+    @ r0 contains pointer to spinlock
     ldrex   r2, [r0]
     cmp     r2, #NOT_LOCKED
     strexeq r2, r1, [r0]

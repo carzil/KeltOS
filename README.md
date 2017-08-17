@@ -12,7 +12,7 @@ And KeltOS will be built.
 # How can I run it?
 Currently, KeltOS supports only Cortex-M4 processor and STM32F407 board and was not tested on real hardware. We use awesome QEMU fork called GNU ARM Eclipse QEMU to run it:
 ```
-/opt/gnuarmeclipse/qemu/bin/qemu-system-gnuarmeclipse -M STM32-E407 -cpu cortex-m4 -kernel kernel.elf --semihosting-config enable=on,target=native -d unimp,guest_errors 
+/opt/gnuarmeclipse/qemu/bin/qemu-system-gnuarmeclipse -M STM32-E407 -cpu cortex-m4 -kernel kernel.elf --semihosting-config enable=on,target=native -d unimp,guest_errors
 ```
 Or simply:
 ```

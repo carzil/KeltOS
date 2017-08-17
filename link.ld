@@ -1,19 +1,13 @@
-ENTRY(kmain)
-
-MEMORY
-{
-    FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 256k
-    SRAM (rwx) : ORIGIN = 0x20000000, LENGTH = 128k
-}
+ENTRY(_start)
 
 SECTIONS {
-    .text ORIGIN(FLASH) :
+    .text 0x0 :
     {
         start_asm.o(.text);
         *(.text*);
     }
 
-    .rodata ORIGIN(SRAM) :
+    .rodata ALIGN(ADDR(.text) + SIZEOF(.text), 4) :
         AT(ALIGN(LOADADDR(.text) + SIZEOF(.text), 4))
     {
         *(.rodata*);

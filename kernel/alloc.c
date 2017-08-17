@@ -4,6 +4,7 @@
 #include "kernel/defs.h"
 #include "kernel/memory.h"
 #include "kernel/bug.h"
+#include "kernel/irq.h"
 
 /*
  * This is implementation of malloc-like memory allocator.
@@ -13,7 +14,7 @@
  * Data size is always divisible by 4, so chunk_headers always are word-aligned.
  */
 
-#define MM_RIGHT_BOUNDARY ((void*)(SRAM_BASE + SRAM_SIZE - STACK_SIZE))
+#define AVAIL_SPACE     0x100000
 
 struct chunk {
     u32 size;
@@ -24,6 +25,7 @@ struct chunk {
 };
 
 static struct chunk* head_chunk = NULL;
+
 
 struct chunk* chunk_left(void* chunk)
 {
@@ -42,7 +44,7 @@ struct chunk* chunk_right(void* chunk)
     chunk += ((struct chunk*)chunk)->size;
     chunk += sizeof(struct chunk);
     chunk += sizeof(u32);
-    if (chunk >= MM_RIGHT_BOUNDARY) {
+    if ((char*)chunk >= (&_data_brk + AVAIL_SPACE)) {
         return NULL;
     }
     return chunk;
@@ -52,22 +54,6 @@ void chunk_set_size(struct chunk* chunk, u32 size)
 {
     chunk->size = size;
     *(u32*)(chunk->data + size) = size;
-}
-
-/*
- * Memory manager initialization routine.
- */
-void mm_init()
-{
-    u32 size;
-
-    head_chunk = data_brk;
-    head_chunk->flags = CHUNK_FREE;
-    /* heap is located in the middle of SRAM */
-    size = SRAM_SIZE - STACK_SIZE - sizeof(struct chunk) - sizeof(u32) - ((u32)data_brk - SRAM_BASE);
-    head_chunk->next = NULL;
-    head_chunk->size = size;
-    chunk_set_size(head_chunk, size);
 }
 
 /*
@@ -105,7 +91,7 @@ void* kalloc(u32 size)
         size += 4 - (size & 3);
     }
 
-    /* TODO: disable all irqs and suspend scheduler here */
+    disable_irq();
 
     /* Ensure we have enough size to allocate chunk_header */
     alloc_chunk_size = size + sizeof(struct chunk) + sizeof(u32);
@@ -134,6 +120,9 @@ void* kalloc(u32 size)
         /* alloc_chunk is not inserted in free list */
         alloc_chunk = chunk_split(ptr, size);
     }
+
+    enable_irq();
+
     alloc_chunk->flags = CHUNK_USED;
     alloc_chunk->next = NULL;
     return (void*)(alloc_chunk->data);
@@ -144,10 +133,11 @@ void kfree(void* p)
     struct chunk* ptr;
     struct chunk* chunk = (struct chunk*)(p - sizeof(struct chunk));
 
-    // TODO: disable all irqs and suspend scheduler here
 
     struct chunk* left = chunk_left(chunk);
     struct chunk* right = chunk_right(chunk);
+
+    disable_irq();
 
     if (left != NULL && left->flags & CHUNK_FREE) {
         /* our chunk and chunk to the left are free, merge them */
@@ -191,4 +181,24 @@ void kfree(void* p)
         }
         chunk->flags = CHUNK_FREE;
     }
+
+    enable_irq();
+}
+
+/*
+ * Memory manager initialization routine.
+ */
+void mm_init()
+{
+    u32 size;
+
+    head_chunk = data_brk;
+    head_chunk->flags = CHUNK_FREE;
+    /* heap is located in the middle of SRAM */
+    size = AVAIL_SPACE - sizeof(struct chunk) - sizeof(u32);
+    head_chunk->next = NULL;
+    head_chunk->size = size;
+    chunk_set_size(head_chunk, size);
+
+    printk("mm: %u bytes free\n", size);
 }
