@@ -12,11 +12,8 @@
 
 void load_sections()
 {
-    kmemcpy(&_data_vma, &_data_lma, (u32)&_data_sz);
-    kmemcpy(&_rodata_vma, &_rodata_lma, (u32)&_rodata_sz);
-    for (u32 i = 0; i < (u32)&_bss_sz; i++) {
-        *(u8*)(&_bss_vma + i) = 0;
-    }
+    kmemcpy(&_data_start, &_data_load, (u32)&_data_end - (u32)&_data_start);
+    kmemset(&_bss_start, '\0', (u32)&_bss_end - (u32)&_bss_start);
 }
 
 struct spinlock spl;

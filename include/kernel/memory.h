@@ -3,14 +3,12 @@
 
 #include "kernel/types.h"
 
-extern void* _rodata_lma;
-extern void* _rodata_vma;
-extern void* _rodata_sz;
-extern void* _data_lma;
-extern void* _data_vma;
-extern void* _data_sz;
-extern void* _bss_vma;
-extern void* _bss_sz;
+extern void* _data_load;
+extern void* _data_start;
+extern void* _data_end;
+
+extern void* _bss_start;
+extern void* _bss_end;
 extern void* _data_brk;
 
 #define data_brk ((void*)(&_data_brk))
