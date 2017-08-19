@@ -2,6 +2,7 @@
 #include "kernel/printk.h"
 #include "kernel/types.h"
 #include "kernel/defs.h"
+#include "kernel/alloc.h"
 #include "kernel/spinlock.h"
 #include "sched/sched.h"
 #include "drivers/semihosting.h"
@@ -70,7 +71,7 @@ size_t bprintptr(char* buf, void* ptr) {
         return bprintstr(buf, "(nil)");
     }
     bytes = bprintstr(buf, "0x");
-    return bytes + bprintu32(buf + bytes, (u32) ptr, 16); 
+    return bytes + bprintu32(buf + bytes, (u32) ptr, 16);
 }
 
 void printu32(u32 a)
@@ -158,7 +159,7 @@ void printk(const char* fmt, ...) {
         ++cursor;
     }
     va_end(args);
-    
+
     *b_cursor = '\0';
     log_buffer_put(buf);
 }

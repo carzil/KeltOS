@@ -8,12 +8,15 @@
 #include "kernel/syscall.h"
 
 enum {
-    MAX_TASKS       = 16,
-    TASK_RUNNING    = 0x1,
-    TASK_SLEEPING   = 0x2,
-    PRIORITY_HIGH   = 0x0,
-    PRIORITY_NORMAL = 0x1,
-    PRIORITY_LOW    = 0x2
+    MAX_TASKS           = 16,
+    TASK_STATE_BITS     = 0b11,
+    TASK_SLEEPING       = 0b00,
+    TASK_RUNNING        = 0b01,
+
+    TASK_PRIORITY_BITS  = 0b1100,
+    PRIORITY_HIGH       = 0b0000,
+    PRIORITY_NORMAL     = 0b0100,
+    PRIORITY_LOW        = 0b1000,
 };
 
 struct task {
@@ -21,12 +24,7 @@ struct task {
 
     char* name;
     u32 pid;
-    /*
-     * bits 0-2: task state (running, blocked etc)
-     * bits 3-4: task priority
-     */
-    u32 state:3;
-    u32 priority:2;
+    u32 flags;
 
     struct list_node lnode;
 };
@@ -66,10 +64,9 @@ struct task* sched_start_task(void* start_address, int priority);
 void sched_start();
 struct task* sched_switch_task();
 
-void sys_exit(struct sys_params* params);
-void sys_yield(struct sys_params* params);
+s32 sys_exit(struct sys_params* params);
+s32 sys_yield(struct sys_params* params);
 
-void sys_sched_start(struct sys_params* params);
 void sched_return_to(struct task* task);
 void sched_switch_in(struct task* task);
 
@@ -77,5 +74,11 @@ void sched_task_set_sleeping(struct task* task);
 void sched_task_wake_up(struct task* task);
 
 #define sched_context_switch() if (sched_enabled) { NVIC_INT_CTRL_REG |= NVIC_PENDSV_SET_BIT; }
+
+#define task_state(task) ((task)->flags & TASK_STATE_BITS)
+#define task_priority(task) ((task)->flags & TASK_PRIORITY_BITS)
+
+#define task_set_state(task, state) ((task)->flags = ((task)->flags & ~(u32)TASK_STATE_BITS) | (state))
+#define task_set_priority(task, priority) ((task)->flags = ((task)->flags & ~(u32)TASK_PRIORITY_BITS) | (priority))
 
 #endif

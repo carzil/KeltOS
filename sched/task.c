@@ -1,3 +1,4 @@
+#include "kernel/defs.h"
 #include "sched/sched.h"
 #include "kernel/alloc.h"
 #include "kernel/memory.h"
@@ -20,7 +21,7 @@ LIST_HEAD_DEFINE(low_priority_list);
 
 static void sched_insert_task(struct task* task)
 {
-    switch (task->priority) {
+    switch (task_priority(task)) {
     case PRIORITY_HIGH:
         list_insert_last(&high_priority_list, &task->lnode);
         break;
@@ -63,11 +64,12 @@ struct task* sched_start_task(void* start_address, int priority)
         exc_ctx->psr = DEFAULT_PSR;
 
         task->sp = sp;
-        task->priority = priority;
-        task->state = TASK_RUNNING;
+        task_set_priority(task, priority);
+        task_set_state(task, TASK_RUNNING);
 
         sched_insert_task(task);
     }
+
     return task;
 }
 
@@ -88,42 +90,44 @@ struct task* sched_switch_task()
     return c_task;
 }
 
-void sched_start()
-{
-    sched_enabled = 1;
-
-    struct task* task = sched_switch_task();
-    volatile struct task_context_exc* ctx = task->sp + sizeof(struct task_context);
-    /* task has no internal state yet, so register values are not important:
-     * psr can hold actual value of pc. +1 for setting T-bit */
-    ctx->psr = ctx->pc + 1;
-    sched_switch_in(task);
-}
-
 void sched_task_set_sleeping(struct task* task)
 {
     list_delete(&task->lnode);
-    task->state = TASK_SLEEPING;
+    task_set_state(task, TASK_SLEEPING);
 }
 
 void sched_task_wake_up(struct task* task)
 {
-    if (task->state == TASK_SLEEPING) {
-        task->state = TASK_RUNNING;
+    if (task_state(task) == TASK_SLEEPING) {
+        task_set_state(task, TASK_RUNNING);
         sched_insert_task(task);
     }
 }
 
-void sys_exit(struct sys_params* params)
+s32 sys_exit(struct sys_params* params)
 {
     BUG_ON_NULL(c_task);
     list_delete(&c_task->lnode);
     c_task->pid = 0;
     sched_context_switch();
+
+    return KELT_OK;
 }
 
-void sys_yield(struct sys_params* params)
+s32 sys_yield(struct sys_params* params)
 {
     BUG_ON_NULL(c_task);
+    sched_context_switch();
+
+    return KELT_OK;
+}
+
+void sched_start()
+{
+    sched_enabled = 1;
+    c_task = sched_switch_task();
+    /* emulate enter from process stack */
+    c_task->sp += sizeof(struct task_context);
+    set_psp((u32)c_task->sp);
     sched_context_switch();
 }

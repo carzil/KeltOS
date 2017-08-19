@@ -62,5 +62,6 @@ static inline void list_rotate_left(struct list_node* node)
 #define list_empty(head) ((head) == (head)->next)
 
 #define LIST_HEAD_DEFINE(name) struct list_node name = { &name, &name }
+#define LIST_HEAD_DECLARE(name) struct list_node name
 
 #endif

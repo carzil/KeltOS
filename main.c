@@ -34,7 +34,7 @@ void taskd()
 {
     u32 last_tick = 0;
     int cnt = 0;
-    for (; cnt < 100000;) {
+    for (;;) {
         if (c_tick != last_tick) {
             // smhost_printz("task d\n");
             printk("DDD %d\n", cnt++);
@@ -42,11 +42,6 @@ void taskd()
             cnt++;
         }
     }
-    printk("Task D exit\n");
-    asm (
-        "mov    r0, #0\n"
-        "swi    #32\n"
-    );
 }
 
 void kmain(void)
@@ -57,11 +52,13 @@ void kmain(void)
     systick_init();
     printk_init();
 
-    struct task* taska = sched_start_task(&taskd, PRIORITY_HIGH);
-    taska->name = "task D";
-    // sched_start_task(&taskb, PRIORITY_NORMAL);
-    // sched_start_task(&taskd, PRIORITY_NORMAL);
-    // sched_start_task(&taskc, PRIORITY_NORMAL);
+    struct task* tsk = sched_start_task(&taskd, PRIORITY_HIGH);
+    tsk->name = "task D";
+    struct task* tsk2 = sched_start_task(&taska, PRIORITY_HIGH);
+    tsk2->name = "task A";
+
     irq_enable();
     sched_start();
+    isb();
+    for (;;);
 }

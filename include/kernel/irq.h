@@ -21,4 +21,6 @@ enum {
 #define irq_enable() asm("cpsie if")
 #define irq_disable() asm("cpsid if")
 
+#define isb() asm("isb")
+
 #endif

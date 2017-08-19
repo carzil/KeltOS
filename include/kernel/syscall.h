@@ -20,7 +20,7 @@ struct sys_params {
     u32 xpsr;
 };
 
-typedef void (*syscall_handler_t)(struct sys_params*);
+typedef s32 (*syscall_handler_t)(struct sys_params*);
 
 void swi_handler();
 
