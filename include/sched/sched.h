@@ -27,7 +27,7 @@ struct task {
      */
     u32 state:3;
     u32 priority:2;
-    
+
     struct list_node lnode;
 };
 

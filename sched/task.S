@@ -12,23 +12,17 @@ FUNCTION(pendsv_handler):
     RESTORE_CONTEXT
 
     /* jump to task */
-    mov     lr, #0xfffffffd
+    mov     lr, #EXC_THREAD_PROCESS
     bx      lr
-
-FUNCTION(sched_return_to):
-    RESTORE_CONTEXT
-    mov     lr, #0xfffffffd
-    bx      lr    
 
 FUNCTION(sched_switch_in):
     RESTORE_CONTEXT
 
     /* switch to process stack */
-    mov     r0, #2
-    orr     r0, #DEFAULT_PSR
+    mov     r0, #0b11
     msr     control, r0
 
     /* this routine is called only when scheduler starts,
-     * so we doesn't matter about register actual values */
+     * so we don't matter about register actual values */
     pop     {r0-r3, r12, lr}
     pop     {r0, pc}

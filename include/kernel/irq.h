@@ -18,7 +18,7 @@ enum {
     ARM_MAIN_STACK    = 0xfffffff1
 };
 
-#define irq_enable() asm("cpsie f")
-#define irq_disable() asm("cpsid f")
+#define irq_enable() asm("cpsie if")
+#define irq_disable() asm("cpsid if")
 
 #endif

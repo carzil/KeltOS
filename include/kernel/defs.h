@@ -17,4 +17,8 @@
 #define RING_BUFFER_POW     12
 #define RING_BUFFER_SIZE    (1 << RING_BUFFER_POW)
 
+#define EXC_HANDLER_MAIN    0xfffffff1
+#define EXC_THREAD_MAIN     0xfffffff9
+#define EXC_THREAD_PROCESS  0xfffffffd
+
 #endif

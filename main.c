@@ -51,17 +51,17 @@ void taskd()
 
 void kmain(void)
 {
+    irq_disable();
     load_sections();
     mm_init();
     systick_init();
-
     printk_init();
+
     struct task* taska = sched_start_task(&taskd, PRIORITY_HIGH);
     taska->name = "task D";
     // sched_start_task(&taskb, PRIORITY_NORMAL);
     // sched_start_task(&taskd, PRIORITY_NORMAL);
     // sched_start_task(&taskc, PRIORITY_NORMAL);
-
-
+    irq_enable();
     sched_start();
 }

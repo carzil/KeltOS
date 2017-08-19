@@ -1,23 +1,41 @@
-#include "kernel/defs.h"
+#include "kernel/defs_asm.h"
 
     .syntax unified
     .text
 int_vec:
-    .word STACK_END-0x4 @ intial sp value
-    .word kmain         @ reset address
-    .word 0             @ NMI
-    .word 0             @ Hard Fault
-    .word 0             @ Memory Fault
-    .word 0             @ Bus Fault
-    .word 0             @ Usage Fault
-    .word 0             @ 7
-    .word 0             @ To
-    .word 0             @ 10 
-    .word 0             @ Reserved
+    .word STACK_END-0x4
+    .word kmain
+    .word nmi_handler
+    .word hard_fault_handler
+    .word memory_fault_handler
+    .word bus_fault_handler
+    .word usage_fault_handler
+    .word 0
+    .word 0
+    .word 0
+    .word 0
     .word swi_handler
-    .word 0             @ DebugMon_Handler
-    .word 0             @ Reserved
+    .word debugmon_handler
+    .word 0
     .word pendsv_handler
     .word systick_handler
-    .word 0             @ IRQ_Handler
-    .word 0             @ IRQ_Handler
+
+    /* here comes interrupts vector */
+
+FUNCTION(nmi_handler):
+    b .
+
+FUNCTION(hard_fault_handler):
+    b .
+
+FUNCTION(memory_fault_handler):
+    b .
+
+FUNCTION(bus_fault_handler):
+    b .
+
+FUNCTION(usage_fault_handler):
+    b .
+
+FUNCTION(debugmon_handler):
+    b .

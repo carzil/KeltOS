@@ -94,7 +94,7 @@ void sched_start()
 
     struct task* task = sched_switch_task();
     volatile struct task_context_exc* ctx = task->sp + sizeof(struct task_context);
-    /* task has no internal state yet, so register values are not important: 
+    /* task has no internal state yet, so register values are not important:
      * psr can hold actual value of pc. +1 for setting T-bit */
     ctx->psr = ctx->pc + 1;
     sched_switch_in(task);
