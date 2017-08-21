@@ -1,7 +1,7 @@
 #include "kernel/defs_asm.h"
 
     .syntax unified
-    .text
+    .section ".int_vec", "a"
 int_vec:
     .word STACK_END-0x4
     .word kmain

@@ -9,7 +9,7 @@ MEMORY
 SECTIONS {
     .text :
     {
-        start_asm.o(.text);
+        *(.int_vec);
         *(.text*);
         *(.rodata);
     } >FLASH
