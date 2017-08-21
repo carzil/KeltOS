@@ -46,7 +46,7 @@ void taskd()
 
 void kmain(void)
 {
-    irq_disable();
+    irq_disable_force();
     load_sections();
     mm_init();
     systick_init();
@@ -57,7 +57,7 @@ void kmain(void)
     struct task* tsk2 = sched_start_task(&taska, PRIORITY_HIGH);
     tsk2->name = "task A";
 
-    irq_enable();
+    irq_enable_force();
     sched_start();
     isb();
     for (;;);
