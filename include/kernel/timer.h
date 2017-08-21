@@ -8,4 +8,6 @@ enum { TICK_RATE_HZ = 100 };
 
 extern volatile u32 c_tick;
 
+void timer_tick();
+
 #endif

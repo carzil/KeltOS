@@ -1,17 +1,18 @@
 #include "kernel/types.h"
+#include "kernel/timer.h"
 #include "drivers/systick.h"
+#include "drivers/semihosting.h"
 #include "sched/sched.h"
 #include "kernel/irq.h"
 #include "sched/cpu.h"
 
 void NAKED systick_handler()
 {
-    irq_disable();
-    c_tick++;
-    if (sched_enabled && (c_tick % 100) == 0) {
-        sched_context_switch();
-    }
-    irq_enable();
+    asm (
+        "push   {lr}\n"
+        "bl     timer_tick\n"
+        "pop    {lr}\n"
+    );
     EXCEPTION_RETURN_DEFAULT();
 }
 
