@@ -28,7 +28,7 @@ u32 smhost_open(const char* fname, u32 fname_size, u32 mode)
     return smhost_gateway(SMHOST_OPEN, smhost_req);
 }
 
-u32 smhost_print(void* buf, u32 size)
+u32 smhost_print(const char* buf, u32 size)
 {
     u32 smhost_req[3] = {
         smhost_stdout,
@@ -40,8 +40,5 @@ u32 smhost_print(void* buf, u32 size)
 
 u32 smhost_printz(const char* buf)
 {
-    irq_disable();
-    s32 res = smhost_gateway(SMHOST_WRITE0, (void*)buf);
-    irq_enable();
-    return res;
+    return smhost_gateway(SMHOST_WRITE0, (void*)buf);
 }

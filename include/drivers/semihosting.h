@@ -11,7 +11,7 @@ enum {
 
 extern int smhost_stdout;
 
-u32 smhost_print(void* buf, u32 size);
+u32 smhost_print(const char* buf, u32 size);
 u32 smhost_printz(const char* buf);
 
 #endif
