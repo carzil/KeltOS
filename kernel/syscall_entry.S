@@ -1,4 +1,4 @@
-#include "kernel/defs_asm.h"
+#include "kernel/defs.h"
 
 FUNCTION(swi_handler):
     ldr     r0, =c_task

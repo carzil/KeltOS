@@ -1,4 +1,4 @@
-#include "kernel/defs_asm.h"
+#include "kernel/defs.h"
 
     .syntax unified
     .section ".int_vec", "a"

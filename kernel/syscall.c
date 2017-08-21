@@ -1,4 +1,4 @@
-#include "kernel/cdefs.h"
+#include "kernel/defs.h"
 #include "kernel/syscall.h"
 #include "kernel/irq.h"
 #include "sched/sched.h"

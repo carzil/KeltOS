@@ -1,4 +1,4 @@
-#include "kernel/defs_asm.h"
+#include "kernel/defs.h"
 
 /* PendSV is used by KeltOS for context switching. */
 FUNCTION(pendsv_handler):

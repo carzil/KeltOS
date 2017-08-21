@@ -1,4 +1,4 @@
-#include "kernel/defs_asm.h"
+#include "kernel/defs.h"
 
 #define LOCKED      0x1
 #define NOT_LOCKED  0x0
