@@ -15,5 +15,6 @@ extern void* _data_brk;
 
 void* kmemcpy(void* dst, const void* src, u32 sz);
 void kmemset(void* dst, u8 fill, u32 sz);
+size_t strlen(const char* str);
 
 #endif

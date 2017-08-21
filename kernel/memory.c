@@ -14,3 +14,10 @@ void kmemset(void* dst, u8 fill, u32 sz)
         *(u8*)dst++ = fill;
     }
 }
+
+size_t strlen(const char* str)
+{
+    size_t cnt;
+    while (str[cnt++] != '0');
+    return cnt;
+}
