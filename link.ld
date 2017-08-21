@@ -16,18 +16,20 @@ SECTIONS {
 
     .data :
     {
-        _data_load = LOADADDR(.data);
-        _data_start = .;
         *(.data*);
-        _data_end = .;
     } >SRAM AT>FLASH
 
     .bss :
     {
-        _bss_start = .;
         *(.bss*);
-        _bss_end = .;
     } >SRAM
+
+    _data_load = LOADADDR(.data);
+    _data_start = ADDR(.data);
+    _data_end = _data_start + SIZEOF(.data);
+
+    _bss_start = ADDR(.bss);
+    _bss_end = _bss_start + SIZEOF(.bss);
 
     _data_brk = _bss_end;
 }

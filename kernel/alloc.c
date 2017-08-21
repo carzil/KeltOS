@@ -23,7 +23,7 @@ struct chunk {
     u8 data[0];
 };
 
-static struct chunk* head_chunk = NULL;
+struct chunk* head_chunk = NULL;
 
 struct chunk* chunk_left(void* chunk)
 {
