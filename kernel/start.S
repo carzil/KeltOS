@@ -3,7 +3,7 @@
     .syntax unified
     .section ".int_vec", "a"
 int_vec:
-    .word STACK_END-0x4
+    .word STACK_END
     .word kmain
     .word nmi_handler
     .word hard_fault_handler
