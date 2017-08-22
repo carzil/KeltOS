@@ -1,14 +1,9 @@
 dist: trusty
 language: c
 
-addons:
-  apt:
-    packages:
-      - gcc-arm-none-eabi
-
 script:
-  - arm-none-eabi-gcc --version
-  - make
+  - chmod +x travis_build.sh
+  - ./travis_build.sh
 
 notifications:
   webhooks: https://fathomless-fjord-24024.herokuapp.com/notify
