@@ -56,12 +56,13 @@ static inline void list_rotate_left(struct list_node* node)
 
 
 #define list_entry(ptr, type, node_field) ((type*) (((char*)ptr) - offsetof(type, node_field)) )
-#define list_first_entry(head, type, node_field) (list_entry(head.next, type, node_field))
+#define list_first_entry(head, type, node_field) (list_entry((head)->next, type, node_field))
 #define list_next_entry(ptr, node_field) (list_entry((ptr)->node_field.next, typeof(*ptr), node_field))
 #define list_foreach(head, ptr) for (ptr = (head)->next; ptr != (head); ptr = ptr->next)
 #define list_empty(head) ((head) == (head)->next)
 
 #define LIST_HEAD_DEFINE(name) struct list_node name = { &name, &name }
 #define LIST_HEAD_DECLARE(name) struct list_node name
+#define LIST_HEAD_INIT(list_head) do { (list_head)->next = (list_head); (list_head)->prev = (list_head); } while (0)
 
 #endif
