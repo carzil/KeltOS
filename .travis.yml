@@ -9,3 +9,6 @@ addons:
 script:
   - arm-none-eabi-gcc --version
   - make
+
+notifications:
+  webhooks: https://fathomless-fjord-24024.herokuapp.com/notify
