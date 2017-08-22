@@ -183,7 +183,7 @@ void dump_kernel_log_task()
         sched_task_set_sleeping(_dump_task);
         asm (
             "mov    r0, #1\n"
-            "swi    #32"
+            "swi    #0"
         );
     }
 }

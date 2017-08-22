@@ -18,6 +18,7 @@
 #define EXC_THREAD_PROCESS  0xfffffffd
 
 #define KELT_OK             0
+#define ENOSYS              0x00000001
 
 
 #ifdef __ASSEMBLER__

@@ -6,14 +6,16 @@ FUNCTION(swi_handler):
 
     SAVE_CONTEXT
 
-    push    {lr}
-    mrs     r0, psp
-    /* get sys_number: it is stored in r0 which saved by hardware */
-    ldr     r2, [r0, #0]
-    ldr     r1, =syscall_table
-    /* load syscall handler address */
-    ldr     r3, [r1, r2, lsl #2]
-    blx     r3
+    /* SAVE_CONTEXT returns new sp in r1, it points to struct sys_regs */
+    mov     r0, r1
+    bl      __syscall_trampoline
 
-    pop     {lr}
+    /* c_task can be switched after __syscall_trampoline */
+    ldr     r0, =c_task
+    ldr     r0, [r0]
+
+    /* restore context of current task anyway */
+    RESTORE_CONTEXT
+
+    mov     lr, #EXC_THREAD_PROCESS
     bx      lr

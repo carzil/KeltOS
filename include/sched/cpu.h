@@ -16,4 +16,14 @@ static inline void set_psp(u32 val)
     );
 }
 
+static inline void set_msp(u32 val)
+{
+    asm (
+        "msr msp, %0"
+        :
+        : "r"(val)
+        :
+    );
+}
+
 #endif

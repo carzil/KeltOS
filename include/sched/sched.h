@@ -9,9 +9,13 @@
 
 enum {
     MAX_TASKS           = 16,
+    INVALID_PID         = 0,
+    MAX_PRIORITY        = 2,
+
     TASK_STATE_BITS     = 0b11,
     TASK_SLEEPING       = 0b00,
     TASK_RUNNING        = 0b01,
+    TASK_CRAVING        = 0b10,
 
     TASK_PRIORITY_BITS  = 0b1100,
     PRIORITY_HIGH       = 0b0000,
@@ -21,10 +25,11 @@ enum {
 
 struct task {
     void* sp;
+    u32 flags;
 
+    void* sp_initial;
     char* name;
     u32 pid;
-    u32 flags;
 
     struct list_node lnode;
 };
@@ -62,10 +67,11 @@ extern void context_switch(struct task* from, struct task* to);
 
 struct task* sched_start_task(void* start_address, int priority);
 void sched_start();
+void sched_init();
 struct task* sched_switch_task();
 
-s32 sys_exit(struct sys_params* params);
-s32 sys_yield(struct sys_params* params);
+s32 sys_exit(struct sys_regs* regs);
+s32 sys_yield(struct sys_regs* regs);
 
 void sched_return_to(struct task* task);
 void sched_switch_in(struct task* task);
@@ -80,5 +86,8 @@ void sched_task_wake_up(struct task* task);
 
 #define task_set_state(task, state) ((task)->flags = ((task)->flags & ~(u32)TASK_STATE_BITS) | (state))
 #define task_set_priority(task, priority) ((task)->flags = ((task)->flags & ~(u32)TASK_PRIORITY_BITS) | (priority))
+
+#define task_ctx_exc(sp) ((struct task_context_exc*)((u8*)(sp) - sizeof(struct task_context_exc)))
+#define task_ctx(sp) ((struct task_context*)((u8*)(sp) - sizeof(struct task_context_exc) - sizeof(struct task_context)))
 
 #endif

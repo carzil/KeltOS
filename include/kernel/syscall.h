@@ -3,25 +3,31 @@
 
 #include "kernel/types.h"
 
-enum { SYSCALL_COUNT = 2 };
+/* This struct defines register order on syscall entry */
+struct sys_regs {
+    /* registers saved by Kelt */
+    u32 r4;
+    u32 r5;
+    u32 r6;
+    u32 r7;
+    u32 r8;
+    u32 r9;
+    u32 r10;
+    u32 r11;
 
-
-struct sys_params {
-    /* params passed in registers: r0, r1, r2, r3, r12, r14 */
-    u32 sys_number;
-    u32 arg1;
-    u32 arg2;
-    u32 arg3;
-    u32 arg4;
-    u32 arg5;
-
-    /* this is not syscall params but required to find parameters location */
-    u32 ret_addr;
-    u32 xpsr;
+    /* registers saved by processor */
+    u32 r0;
+    u32 r1;
+    u32 r2;
+    u32 r3;
+    u32 r12;
+    u32 lr;
+    u32 pc;
+    u32 psr;
 };
 
-typedef s32 (*syscall_handler_t)(struct sys_params*);
+typedef s32 (*syscall_handler_t)(struct sys_regs*);
 
-void swi_handler();
+extern void swi_handler();
 
 #endif
