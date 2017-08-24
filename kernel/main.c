@@ -10,6 +10,7 @@
 #include "sched/sched.h"
 #include "drivers/systick.h"
 #include "drivers/semihosting.h"
+#include "reactor/reactor.h"
 
 void load_sections()
 {
@@ -50,37 +51,25 @@ void taska()
     }
 }
 
-void taskd()
+void taskd(struct reactor_event* ev)
 {
     // u32 last_tick = 0;
     // int cnt = 0;
+    smhost_printz("test event delivered\n");
     asm (
-        "mov r0, #500\n"
-        "mov r1, #501\n"
-        "mov r2, #502\n"
-        "mov r3, #503\n"
-        "mov r4, #504\n"
-        "mov r5, #505\n"
-        "mov r6, #506\n"
-        "mov r7, #507\n"
-        "mov r8, #508\n"
-        "mov r9, #509\n"
-        "mov r10, #510\n"
-        "mov r11, #511\n"
-        "mov r12, #512\n"
+        "mov    r0, #2\n"
+        "svc    #0"
     );
-    for (;;) {
-        asm (
-            "mov r0, #1\n"
-            "swi #0"
-        );
+        // asm (
+        //     "mov r0, #1\n"
+        //     "swi #0"
+        // );
         // if (c_tick != last_tick) {
         //     // smhost_printz("task d\n");
         //     printk("DDD %d\n", cnt++);
         //     last_tick = c_tick;
         //     cnt++;
         // }
-    }
 }
 
 void kmain(void)
@@ -89,13 +78,15 @@ void kmain(void)
     load_sections();
     mm_init();
     sched_init();
+    reactor_init();
+    s32 id = reactor_register_event_type("org.kelt.TestEvent");
+    timer_init();
     systick_init();
     printk_init();
 
-    struct task* tsk = sched_start_task(&taskd, PRIORITY_NORMAL);
+    struct task* tsk = sched_create_task(PRIORITY_NORMAL);
     tsk->name = "task D";
-    struct task* tsk2 = sched_start_task(&taska, PRIORITY_NORMAL);
-    tsk2->name = "task A";
+    reactor_watch_for(tsk, id, &taskd);
 
     /* prepare scheduler */
     sched_start();

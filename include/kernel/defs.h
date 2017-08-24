@@ -18,7 +18,11 @@
 #define EXC_THREAD_PROCESS  0xfffffffd
 
 #define KELT_OK             0
-#define ENOSYS              0x00000001
+#define ENOSYS              1
+#define EINVAL              2
+#define ENOENT              3
+#define EEXIST              4
+#define ENOMEM              5
 
 
 #ifdef __ASSEMBLER__

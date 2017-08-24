@@ -6,6 +6,7 @@
 #include "kernel/list.h"
 #include "drivers/nvic.h"
 #include "kernel/syscall.h"
+#include "reactor/reactor.h"
 
 enum {
     MAX_TASKS           = 16,
@@ -31,31 +32,9 @@ struct task {
     char* name;
     u32 pid;
 
+    struct reactor_task_ctx reactor_ctx;
+
     struct list_node lnode;
-};
-
-/* saved task context on exception entry */
-struct task_context_exc {
-    u32 r0;
-    u32 r1;
-    u32 r2;
-    u32 r3;
-    u32 r12;
-    u32 lr;
-    u32 pc;
-    u32 psr;
-};
-
-/* saved task context on context switch */
-struct task_context {
-    u32 r4;
-    u32 r5;
-    u32 r6;
-    u32 r7;
-    u32 r8;
-    u32 r9;
-    u32 r10;
-    u32 r11;
 };
 
 /* stores current task */
@@ -76,8 +55,13 @@ s32 sys_yield(struct sys_regs* regs);
 void sched_return_to(struct task* task);
 void sched_switch_in(struct task* task);
 
-void sched_task_set_sleeping(struct task* task);
+void sched_task_set_sleeping(struct task* task, u32 state);
 void sched_task_wake_up(struct task* task);
+
+void* task_put_on_stack(struct task* task, void* data, size_t size);
+struct sys_regs* task_prepare_stack(struct task* task);
+
+struct task* sched_create_task(int priority);
 
 #define sched_context_switch() if (sched_enabled) { NVIC_INT_CTRL_REG |= NVIC_PENDSV_SET_BIT; }
 
@@ -87,7 +71,16 @@ void sched_task_wake_up(struct task* task);
 #define task_set_state(task, state) ((task)->flags = ((task)->flags & ~(u32)TASK_STATE_BITS) | (state))
 #define task_set_priority(task, priority) ((task)->flags = ((task)->flags & ~(u32)TASK_PRIORITY_BITS) | (priority))
 
-#define task_ctx_exc(sp) ((struct task_context_exc*)((u8*)(sp) - sizeof(struct task_context_exc)))
-#define task_ctx(sp) ((struct task_context*)((u8*)(sp) - sizeof(struct task_context_exc) - sizeof(struct task_context)))
+static inline void task_fill_regs(struct sys_regs* regs, void* addr)
+{
+    /* gcc produces addresses with non-zero last bit to set EPSR.T bit */
+    regs->pc = (u32)addr & ~(u32)0x1;
+    regs->psr = DEFAULT_PSR;
+}
+
+static inline void task_reset_stack(struct task* task)
+{
+    task->sp = task->sp_initial;
+}
 
 #endif

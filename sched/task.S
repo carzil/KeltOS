@@ -1,6 +1,6 @@
 #include "kernel/defs.h"
 
-/* PendSV is used by KeltOS for context switching. */
+    /* PendSV is used by KeltOS for context switching. */
 FUNCTION(pendsv_handler):
     ldr     r0, =c_task
     ldr     r0, [r0]

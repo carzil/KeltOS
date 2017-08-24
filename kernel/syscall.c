@@ -5,7 +5,8 @@
 
 syscall_handler_t KELT_READONLY syscall_table[] = {
     sys_exit,
-    sys_yield
+    sys_yield,
+    sys_finish_event
 };
 
 void __syscall_trampoline(struct sys_regs* regs)

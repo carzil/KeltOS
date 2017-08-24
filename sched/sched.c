@@ -11,6 +11,11 @@
 
 int sched_enabled = 0;
 struct task tasks[MAX_TASKS];
+struct task idle_task = {
+    .name = "idle task",
+    .flags = TASK_RUNNING | PRIORITY_HIGH,
+    .pid = INVALID_PID,
+};
 struct task* c_task = NULL;
 
 LIST_HEAD_DECLARE(priority_lists)[MAX_PRIORITY + 1];
@@ -23,7 +28,20 @@ static void sched_insert_task(struct task* task)
     list_insert_last(&priority_lists[pos], &task->lnode);
 }
 
-struct task* sched_start_task(void* start_address, int priority)
+struct sys_regs* task_prepare_stack(struct task* task)
+{
+    task->sp -= sizeof(struct sys_regs);
+    return task->sp;
+}
+
+void* task_put_on_stack(struct task* task, void* data, size_t sz)
+{
+    task->sp -= sz;
+    kmemcpy(task->sp, data, sz);
+    return task->sp;
+}
+
+struct task* sched_create_task(int priority)
 {
     struct task* task = NULL;
     for (u32 i = 0; i < MAX_TASKS; i++) {
@@ -42,21 +60,13 @@ struct task* sched_start_task(void* start_address, int priority)
             return NULL;
         }
 
-        task->sp_initial = sp_top;
-        task->sp = sp_top + TASK_STACK_SIZE;
-        struct task_context_exc* exc_ctx = task_ctx_exc(task->sp);
-        struct task_context* ctx = task_ctx(task->sp);
-        /* prepare stack pointer for first context restore */
-        task->sp = ctx;
+        task->sp_initial = sp_top + TASK_STACK_SIZE;
 
-        /* gcc produces addresses with non-zero last bit to set EPSR.T bit */
-        exc_ctx->pc = ((u32)start_address) & ~(u32)0x1;
-        exc_ctx->psr = DEFAULT_PSR;
-
+        task_prepare_stack(task);
         task_set_priority(task, priority);
-        task_set_state(task, TASK_RUNNING);
+        task_set_state(task, TASK_CRAVING);
 
-        sched_insert_task(task);
+        reactor_task_init(task);
     }
 
     return task;
@@ -81,22 +91,22 @@ struct task* sched_switch_task()
             break;
         }
     }
-
+    if (c_task == NULL) {
+        c_task = &idle_task;
+    }
     return c_task;
 }
 
-void sched_task_set_sleeping(struct task* task)
+void sched_task_set_sleeping(struct task* task, u32 state)
 {
     list_delete(&task->lnode);
-    task_set_state(task, TASK_SLEEPING);
+    task_set_state(task, state);
 }
 
 void sched_task_wake_up(struct task* task)
 {
-    if (task_state(task) == TASK_SLEEPING) {
-        task_set_state(task, TASK_RUNNING);
-        sched_insert_task(task);
-    }
+    task_set_state(task, TASK_RUNNING);
+    sched_insert_task(task);
 }
 
 s32 sys_exit(struct sys_regs* params)
@@ -114,23 +124,38 @@ s32 sys_yield(struct sys_regs* params)
     return KELT_OK;
 }
 
+void NAKED _do_idle_task()
+{
+    for (;;) {
+        asm ("wfi");
+    }
+    BUG_ON_REACH();
+}
+
 void sched_init()
 {
     for (size_t i = 0; i <= MAX_PRIORITY; i++) {
         LIST_HEAD_INIT(&priority_lists[i]);
     }
+    idle_task.sp = kalloc(sizeof(struct sys_regs)) + sizeof(struct sys_regs);
+    task_prepare_stack(&idle_task);
+    task_fill_regs(idle_task.sp, &_do_idle_task);
+
+    /* TODO: move to nvic initialization */
+    *(volatile u32*)0xe000ed20 |= 0x1 << 24;
+    *(volatile u32*)0xe000ed20 |= 0x2 << 16;
 }
 
 void sched_start()
 {
-    c_task = sched_switch_task();
+    sched_switch_task();
 
     /*
      * PendSV handler assumes that there is
      * real task already running, so we need to emulate
-     * CPU behavior on exception entry.
+     * CPU behavior on exception entry by pushing out 8 regs saved by Kelt.
      */
-    c_task->sp += sizeof(struct task_context);
+    c_task->sp += 8 * 4;
     set_psp((u32)c_task->sp);
 
     sched_enabled = 1;

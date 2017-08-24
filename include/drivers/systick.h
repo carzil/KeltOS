@@ -16,5 +16,7 @@ extern volatile u32 c_tick;
 
 void systick_handler();
 void systick_init();
+void systick_disable();
+void systick_enable();
 
 #endif

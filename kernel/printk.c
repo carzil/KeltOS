@@ -180,7 +180,7 @@ void dump_kernel_log_task()
             kring_pos_last = kring_pos;
         }
         spinlock_unlock(&kring_buffer_lock);
-        sched_task_set_sleeping(_dump_task);
+        sched_task_set_sleeping(_dump_task, TASK_SLEEPING);
         asm (
             "mov    r0, #1\n"
             "swi    #0"
@@ -190,6 +190,6 @@ void dump_kernel_log_task()
 
 void printk_init()
 {
-    _dump_task = sched_start_task(&dump_kernel_log_task, PRIORITY_HIGH);
-    _dump_task->name = "kernel_dump_log";
+    // _dump_task = sched_start_task(&dump_kernel_log_task, PRIORITY_HIGH);
+    // _dump_task->name = "kernel_dump_log";
 }

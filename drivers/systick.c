@@ -17,9 +17,18 @@ void NAKED systick_handler()
     EXCEPTION_RETURN_DEFAULT();
 }
 
+void systick_disable()
+{
+    *(volatile u32*)SYSTICK_CSR &= ~(u32)(SYSTICK_ENABLE | SYSTICK_INT);
+}
+
+void systick_enable()
+{
+    *(volatile u32*)SYSTICK_CSR = SYSTICK_ENABLE | SYSTICK_INT | 0x4;
+}
+
 void systick_init()
 {
-    c_tick = 0;
     /*
      * By default SysTick operates on the same frequency as the processor.
      * Don't forget to subtract 1, cause in [0, n-1] there are n numbers.
@@ -27,7 +36,7 @@ void systick_init()
     *(volatile u32*)SYSTICK_RVR = (CPU_CLOCK_RATE_HZ / TICK_RATE_HZ) - 1;
 
     /* Enable SysTick and its interrupts */
-    *(volatile u32*)SYSTICK_CSR = SYSTICK_ENABLE | SYSTICK_INT;
+    systick_enable();
 
     if (!(*(volatile u32*)SYSTICK_CSR & SYSTICK_ENABLE)) {
         panic("cannot enable SysTick");
