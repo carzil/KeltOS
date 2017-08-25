@@ -5,7 +5,7 @@
 #define _STRINGIFY(x) #x
 #define STRINGIFY(x) _STRINGIFY(x)
 
-#define KELT_READONLY __attribute__((section(".rodata")))
+#define UNUSED      __attribute__((unused))
 
 /* This struct defines register order on syscall entry */
 struct sys_regs {

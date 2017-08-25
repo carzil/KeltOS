@@ -8,7 +8,7 @@
 #include "kernel/irq.h"
 
 struct event_type {
-    u32 id;
+    s32 id;
     char name[MAX_EVENT_TYPE_NAME_SIZE + 1];
 
     LIST_HEAD_DECLARE(awaiting_tasks);
@@ -199,7 +199,7 @@ struct event_queue_entry* peek_next_event(struct task* task)
     return eq_entry;
 }
 
-s32 sys_finish_event(struct sys_regs* regs)
+s32 sys_finish_event(UNUSED struct sys_regs* regs)
 {
     sched_task_set_sleeping(c_task, TASK_CRAVING);
     struct event_queue_entry* eq_entry = peek_next_event(c_task);

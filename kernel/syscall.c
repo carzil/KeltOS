@@ -3,7 +3,7 @@
 #include "kernel/irq.h"
 #include "sched/sched.h"
 
-syscall_handler_t KELT_READONLY syscall_table[] = {
+syscall_handler_t const syscall_table[] = {
     sys_exit,
     sys_yield,
     sys_finish_event

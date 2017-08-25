@@ -109,7 +109,7 @@ void sched_task_wake_up(struct task* task)
     sched_insert_task(task);
 }
 
-s32 sys_exit(struct sys_regs* params)
+s32 sys_exit(UNUSED struct sys_regs* params)
 {
     BUG_ON_NULL(c_task);
     sched_finish_task(c_task);
@@ -117,7 +117,7 @@ s32 sys_exit(struct sys_regs* params)
     return KELT_OK;
 }
 
-s32 sys_yield(struct sys_regs* params)
+s32 sys_yield(UNUSED struct sys_regs* params)
 {
     BUG_ON_NULL(c_task);
     sched_switch_task();
