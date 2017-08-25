@@ -43,6 +43,7 @@ static struct event_type* resolve_event_type(s32 id)
 
 void reactor_init()
 {
+    LIST_HEAD_INIT(&event_types);
 }
 
 void reactor_task_init(struct task* task)
@@ -93,8 +94,8 @@ static s32 _try_appease_task(struct task* task)
     /* previous event has finished, cleanup stack */
     task_reset_stack(task);
 
-    /* put event on task stack */
-    void* ev_addr = task_put_on_stack(task, event, event->size);
+    /* put event data on task stack */
+    void* ev_addr = task_put_on_stack(task, event->data, event->data_size);
 
     /* prepare stack for context switch */
     struct sys_regs* regs = task_prepare_stack(task);
@@ -114,20 +115,36 @@ static s32 _try_appease_task(struct task* task)
     return KELT_OK;
 }
 
-/* spread event across tasks waiting for it's type */
-s32 reactor_push_event(struct reactor_event* ev)
+static inline struct reactor_event* event_from_options(struct reactor_event_def ev_def)
 {
+    struct reactor_event* ev = kalloc(sizeof(struct reactor_event));
     if (ev == NULL) {
-        return -EINVAL;
+        return NULL;
+    }
+    ev->type = ev_def.type_id;
+    ev->data = ev_def.data;
+    ev->data_size = ev_def.data_size;
+    ev->destructor = ev_def.dtor;
+    ev->ref_cnt = 0;
+    return ev;
+}
+
+/* spread event across tasks waiting for it's type */
+s32 reactor_push_event(struct reactor_event_def ev_def)
+{
+    struct event_type* ev_type = resolve_event_type(ev_def.type_id);
+
+    if (ev_type == NULL) {
+        return -ENOENT;
+    }
+
+    struct reactor_event* ev = event_from_options(ev_def);
+
+    if (ev == NULL) {
+        return -ENOMEM;
     }
 
     s32 err = KELT_OK;
-    struct event_type* ev_type = resolve_event_type(ev->type);
-    if (ev_type == NULL) {
-        err = -ENOENT;
-        goto cleanup;
-    }
-
     irq_disable_safe(__tmp);
     struct list_node* ptr;
     list_foreach(&ev_type->awaiting_tasks, ptr) {

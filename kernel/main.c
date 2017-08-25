@@ -51,11 +51,11 @@ void taska()
     }
 }
 
-void taskd(struct reactor_event* ev)
+void taskd(const char* message)
 {
     // u32 last_tick = 0;
     // int cnt = 0;
-    smhost_printz("test event delivered\n");
+    smhost_printz(message);
     asm (
         "mov    r0, #2\n"
         "svc    #0"

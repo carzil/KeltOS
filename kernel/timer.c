@@ -17,9 +17,13 @@ void timer_tick()
         sched_context_switch();
     }
     if (c_tick % 10000 == 0) {
-        struct reactor_event* ev = kalloc(sizeof(struct reactor_event));
-        *ev = REACTOR_EVENT_INITIALIZER(test_event_id, struct reactor_event, NULL);
-        reactor_push_event(ev);
+        struct reactor_event_def ev_def = {
+            .type_id = test_event_id,
+            .dtor = NULL,
+            .data = "test message",
+            .data_size = sizeof("test message"),
+        };
+        reactor_push_event(ev_def);
     }
     irq_enable_safe(tmp);
 }
