@@ -162,6 +162,10 @@ void printk(const char* fmt, ...) {
 
     *b_cursor = '\0';
     log_buffer_put(buf);
+
+#ifdef DEBUG
+    smhost_printz(buf);
+#endif
 }
 
 void dump_kernel_log_task()

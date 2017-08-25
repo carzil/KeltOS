@@ -5,7 +5,7 @@ LD          := $(ARM_PREFIX)ld
 AR          := $(ARM_PREFIX)ar
 OBJCOPY     := $(ARM_PREFIX)objcopy
 INCLUDE_DIR := $(realpath include/)
-COMMONFLAGS := $(DEPFLAGS) -Wall -Wextra -nostdlib -nostartfiles -mcpu=cortex-m4 -mthumb -Wa,-mimplicit-it=thumb -g -I$(INCLUDE_DIR)
+COMMONFLAGS := $(DEPFLAGS) -Wall -Wextra -nostdlib -nostartfiles -mcpu=cortex-m4 -mthumb -Wa,-mimplicit-it=thumb -g -I$(INCLUDE_DIR) -DDEBUG
 CCFLAGS     := $(COMMONFLAGS) -std=gnu99 -ffreestanding
 ASMFLAGS    := $(COMMONFLAGS)
 LDFLAGS     := -T link.ld

@@ -7,4 +7,10 @@ void printk(const char* fmt, ...);
 void dump_kernel_log_task();
 void printk_init();
 
+#ifdef DEBUG
+#define printk_debug(args) printk(args)
+#else
+#define print_debug()
+#endif
+
 #endif
