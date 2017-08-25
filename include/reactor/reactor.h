@@ -63,12 +63,3 @@ static inline void reactor_event_decref(struct reactor_event* ev)
         }
     }
 }
-
-static inline void reactor_event_cleanup(struct reactor_event* ev)
-{
-    if (ev->ref_cnt == 0) {
-        if (ev->destructor) {
-            ev->destructor(ev);
-        }
-    }
-}

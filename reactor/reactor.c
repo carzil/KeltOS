@@ -2,6 +2,7 @@
 #include "kernel/defs.h"
 #include "kernel/memory.h"
 #include "kernel/bug.h"
+#include "kernel/printk.h"
 #include "kernel/alloc.h"
 #include "reactor/reactor.h"
 #include "kernel/irq.h"
@@ -83,13 +84,14 @@ s32 reactor_resolve_event_type_id(const char* name)
     return -ENOENT;
 }
 
-static s32 _try_appease_task(struct task* task)
+static inline s32 can_satisfy(struct task* task)
 {
-    if (task_state(task) != TASK_CRAVING) {
-        return KELT_OK;
-    }
-    struct event_queue_entry* eq_entry = list_first_entry(&task->reactor_ctx.event_queue, struct event_queue_entry, lnode);
-    struct reactor_event* event = eq_entry->event;
+    return task_state(task) == TASK_CRAVING;
+}
+
+static s32 satisfy_task(struct task* task, struct reactor_event* event, void* cb_addr)
+{
+    BUG_ON(task_state(task) != TASK_CRAVING);
 
     /* previous event has finished, cleanup stack */
     task_reset_stack(task);
@@ -99,18 +101,13 @@ static s32 _try_appease_task(struct task* task)
 
     /* prepare stack for context switch */
     struct sys_regs* regs = task_prepare_stack(task);
-    task_fill_regs(regs, eq_entry->cb_addr);
+    task_fill_regs(regs, cb_addr);
 
     /* event callback function takes pointer to event as first argument */
     regs->r0 = (u32)ev_addr;
 
     /* launch task */
     sched_task_wake_up(task);
-
-    /* delete event from event queue */
-    list_delete(&eq_entry->lnode);
-    kfree(eq_entry);
-    event->ref_cnt--;
 
     return KELT_OK;
 }
@@ -144,6 +141,9 @@ s32 reactor_push_event(struct reactor_event_def ev_def)
         return -ENOMEM;
     }
 
+    /* ensure no one can delete task without us */
+    reactor_event_incref(ev);
+
     s32 err = KELT_OK;
     irq_disable_safe(__tmp);
     struct list_node* ptr;
@@ -151,21 +151,26 @@ s32 reactor_push_event(struct reactor_event_def ev_def)
         struct await_entry* a_entry = list_entry(ptr, struct await_entry, lnode);
         struct task* task = a_entry->task;
         BUG_ON_NULL(task);
-        struct event_queue_entry* eq_entry = kalloc(sizeof(struct event_queue_entry));
-        if (eq_entry == NULL) {
-            err = -ENOMEM;
-            goto cleanup;
+
+        if (can_satisfy(task)) {
+            /* no need in event queuing, satisfy task right now */
+            satisfy_task(task, ev, a_entry->cb_addr);
+        } else {
+            /* task is not ready to serve event right now, queue it */
+            struct event_queue_entry* eq_entry = kalloc(sizeof(struct event_queue_entry));
+            if (eq_entry == NULL) {
+                err = -ENOMEM;
+                goto cleanup;
+            }
+            eq_entry->event = ev;
+            eq_entry->cb_addr = a_entry->cb_addr;
+            list_insert_last(&task->reactor_ctx.event_queue, &eq_entry->lnode);
+            reactor_event_incref(ev);
         }
-        eq_entry->event = ev;
-        eq_entry->cb_addr = a_entry->cb_addr;
-        list_insert_last(&task->reactor_ctx.event_queue, &eq_entry->lnode);
-        reactor_event_incref(ev);
-        _try_appease_task(task);
     }
 
 cleanup:
-    reactor_event_cleanup(ev);
-
+    reactor_event_decref(ev);
     irq_enable_safe(__tmp);
     return err;
 }
@@ -184,9 +189,28 @@ s32 reactor_watch_for(struct task* task, u32 ev_type_id, void* addr)
     return KELT_OK;
 }
 
+struct event_queue_entry* peek_next_event(struct task* task)
+{
+    if (list_empty(&task->reactor_ctx.event_queue)) {
+        return NULL;
+    }
+    struct event_queue_entry* eq_entry = list_first_entry(&task->reactor_ctx.event_queue, struct event_queue_entry, lnode);
+    list_delete(&eq_entry->lnode);
+    return eq_entry;
+}
+
 s32 sys_finish_event(struct sys_regs* regs)
 {
     sched_task_set_sleeping(c_task, TASK_CRAVING);
+    struct event_queue_entry* eq_entry = peek_next_event(c_task);
+    s32 err = KELT_OK;
+    if (eq_entry != NULL) {
+        /* task can be satisfied right now */
+        struct reactor_event* ev = eq_entry->event;
+        err = satisfy_task(c_task, ev, eq_entry->cb_addr);
+        reactor_event_decref(ev);
+        kfree(eq_entry);
+    }
     sched_switch_task();
-    return KELT_OK;
+    return err;
 }
