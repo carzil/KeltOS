@@ -3,7 +3,7 @@
 #include "kernel/alloc.h"
 #include "sched/sched.h"
 #include "drivers/semihosting.h"
-#include "reactor/reactor.h"
+#include "kernel/reactor.h"
 
 volatile u32 c_tick = 0;
 

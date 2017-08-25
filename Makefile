@@ -9,7 +9,7 @@ COMMONFLAGS := $(DEPFLAGS) -Wall -Wextra -nostdlib -nostartfiles -mcpu=cortex-m4
 CCFLAGS     := $(COMMONFLAGS) -std=gnu99 -ffreestanding
 ASMFLAGS    := $(COMMONFLAGS)
 LDFLAGS     := -T link.ld
-SUBSYSTEMS  := sched/ kernel/ drivers/ reactor/
+SUBSYSTEMS  := sched/ kernel/ drivers/
 C_SOURCES   := $(shell find $(SUBSYSTEMS) -name "*.c")
 ASM_SOURCES := $(shell find $(SUBSYSTEMS) -name "*.S")
 C_OBJS      := $(C_SOURCES:.c=.o)

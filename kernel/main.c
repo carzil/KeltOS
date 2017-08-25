@@ -10,7 +10,7 @@
 #include "sched/sched.h"
 #include "drivers/systick.h"
 #include "drivers/semihosting.h"
-#include "reactor/reactor.h"
+#include "kernel/reactor.h"
 
 void load_sections()
 {

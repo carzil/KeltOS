@@ -4,7 +4,7 @@
 #include "kernel/bug.h"
 #include "kernel/printk.h"
 #include "kernel/alloc.h"
-#include "reactor/reactor.h"
+#include "kernel/reactor.h"
 #include "kernel/irq.h"
 
 struct event_type {

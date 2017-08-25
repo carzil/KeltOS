@@ -6,7 +6,7 @@
 #include "kernel/list.h"
 #include "drivers/nvic.h"
 #include "kernel/syscall.h"
-#include "reactor/reactor.h"
+#include "kernel/reactor.h"
 
 enum {
     MAX_TASKS           = 16,
