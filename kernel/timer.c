@@ -16,7 +16,7 @@ void timer_tick()
     if (sched_enabled && (c_tick % 100) == 0) {
         sched_context_switch();
     }
-    if (c_tick % 10000 == 0) {
+    if (c_tick % 1000 == 0) {
         struct reactor_event_def ev_def = {
             .type_id = test_event_id,
             .dtor = NULL,

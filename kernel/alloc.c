@@ -13,7 +13,7 @@
  * Data size is always divisible by 4, so chunk_headers always are word-aligned.
  */
 
-#define MM_RIGHT_BOUNDARY ((void*)(SRAM_BASE + SRAM_SIZE - STACK_SIZE))
+#define MM_RIGHT_BOUNDARY ((void*)(SRAM_END))
 
 struct chunk {
     u32 size;
@@ -64,7 +64,7 @@ void mm_init()
     head_chunk = data_brk;
     head_chunk->flags = CHUNK_FREE;
     /* heap is located in the middle of SRAM */
-    size = SRAM_SIZE - STACK_SIZE - sizeof(struct chunk) - sizeof(u32) - ((u32)data_brk - SRAM_BASE);
+    size = (SRAM_END - (u32)data_brk) - sizeof(struct chunk) - sizeof(u32);
     head_chunk->next = NULL;
     head_chunk->size = size;
     chunk_set_size(head_chunk, size);

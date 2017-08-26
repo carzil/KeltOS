@@ -22,6 +22,10 @@ void test_task(const char* message)
 {
     smhost_printz(message);
     asm (
+        "mov    r0, #3\n"
+        "svc    #0"
+    );
+    asm (
         "mov    r0, #2\n"
         "svc    #0"
     );
@@ -43,16 +47,8 @@ void kmain(void)
     tsk->name = "test task";
     reactor_watch_for(tsk, id, &test_task);
 
-    /* prepare scheduler */
+    /* start scheduling */
     sched_start();
-
-    /* reset MSP */
-    set_msp(STACK_END);
-
-    /* set pendsv pending and enable irqs, isb is used to wait for PendSV */
-    sched_context_switch();
-    irq_enable_force();
-    isb();
 
     BUG_ON_REACH();
 }

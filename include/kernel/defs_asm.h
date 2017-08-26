@@ -2,9 +2,14 @@
 #define _KELT_DEFS_ASM_H_
 
 
-#define FUNCTION(name) \
-    .globl name; \
-    .type name, %function; \
+#define FUNCTION(name)      \
+    .globl name;            \
+    .type name, %function;  \
+name
+
+#define ISR_HANDLER(name)   \
+    .globl name;            \
+    .align 2;               \
 name
 
 /* r0 should contain task pointer */

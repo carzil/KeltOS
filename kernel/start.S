@@ -1,9 +1,8 @@
 #include "kernel/defs.h"
 
-    .syntax unified
     .section ".int_vec", "a"
 int_vec:
-    .word STACK_END
+    .word stack_end
     .word kmain
     .word nmi_handler
     .word hard_fault_handler
@@ -22,20 +21,26 @@ int_vec:
 
     /* here comes interrupts vector */
 
-FUNCTION(nmi_handler):
+    .section ".startup_stack", "a"
+stack:
+    .zero STACK_SIZE
+stack_end:
+
+
+ISR_HANDLER(nmi_handler):
     b .
 
-FUNCTION(hard_fault_handler):
+ISR_HANDLER(hard_fault_handler):
     b .
 
-FUNCTION(memory_fault_handler):
+ISR_HANDLER(memory_fault_handler):
     b .
 
-FUNCTION(bus_fault_handler):
+ISR_HANDLER(bus_fault_handler):
     b .
 
-FUNCTION(usage_fault_handler):
+ISR_HANDLER(usage_fault_handler):
     b .
 
-FUNCTION(debugmon_handler):
+ISR_HANDLER(debugmon_handler):
     b .

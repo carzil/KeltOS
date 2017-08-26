@@ -1,21 +1,43 @@
 #include "kernel/defs.h"
 
 FUNCTION(swi_handler):
-    ldr     r0, =c_task
-    ldr     r0, [r0]
+    ldr     r1, =c_task
+    ldr     r1, [r1]
 
-    SAVE_CONTEXT
+    cmp     lr, #EXC_THREAD_MAIN
+    /* we are coming from kernelspace, just restore task context */
+    beq     return_to_user
 
-    /* SAVE_CONTEXT returns new sp in r1, it points to struct sys_regs */
-    mov     r0, r1
-    bl      __syscall_trampoline
+    /* we are coming from userspace, save task context */
+    mrs     r0, psp
+    stmdb   r0!, {r4-r11}
 
-    /* c_task can be switched after __syscall_trampoline */
-    ldr     r0, =c_task
-    ldr     r0, [r0]
+    /* reserve space for exception context */
+    sub     sp, #8 * 4
 
-    /* restore context of current task anyway */
-    RESTORE_CONTEXT
+    /* r0 points to full task context
+     * r1 points to temporary kernel exception context */
+    mov     r1, sp
+    bl      __syscall_enter
+
+    cmp     r0, #0
+    /* __syscall_trampoline requested immediate return */
+    bne     return_to_user
+
+    mov     lr, #EXC_THREAD_MAIN
+    bx      lr
+
+return_to_user:
+    /* __syscall_exit returns c_task */
+    bl      __syscall_exit
+
+    /* load c_task->sp */
+    ldr     r1, [r0]
+
+    /* restore context */
+    ldmia   r1!, {r4-r11}
+    str     r1, [r0]
+    msr     psp, r1
 
     mov     lr, #EXC_THREAD_PROCESS
     bx      lr

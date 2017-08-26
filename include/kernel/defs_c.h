@@ -5,7 +5,8 @@
 #define _STRINGIFY(x) #x
 #define STRINGIFY(x) _STRINGIFY(x)
 
-#define UNUSED      __attribute__((unused))
+#define UNUSED          __attribute__((unused))
+#define ALIGN2(x, p)    ((p) - (x) & (p - 1))
 
 /* This struct defines register order on syscall entry */
 struct sys_regs {
@@ -20,6 +21,17 @@ struct sys_regs {
     u32 r11;
 
     /* registers saved by processor */
+    u32 r0;
+    u32 r1;
+    u32 r2;
+    u32 r3;
+    u32 r12;
+    u32 lr;
+    u32 pc;
+    u32 psr;
+};
+
+struct sys_exc_regs {
     u32 r0;
     u32 r1;
     u32 r2;

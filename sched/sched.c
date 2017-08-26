@@ -51,20 +51,23 @@ struct task* sched_create_task(int priority)
             break;
         }
     }
+
     if (task != NULL) {
         /* allocate only one region for all stacks? */
-        void* sp_top = kalloc(TASK_STACK_SIZE);
+        void* sp_top = kalloc(TASK_STACK_SIZE + TASK_KSTACK_SIZE);
 
         if (sp_top == NULL) {
-            /* no space for new task */
             return NULL;
         }
 
         task->sp_initial = sp_top + TASK_STACK_SIZE;
-
+        task->ksp = sp_top + TASK_STACK_SIZE + TASK_KSTACK_SIZE;
+        task->sp = task->sp_initial;
         task_prepare_stack(task);
         task_set_priority(task, priority);
         task_set_state(task, TASK_CRAVING);
+
+        task->flags &= ~(u32)TASK_SYSCALL_BIT;
 
         reactor_task_init(task);
     }
@@ -81,9 +84,10 @@ void sched_finish_task(struct task* task)
     task->pid = INVALID_PID;
 }
 
-struct task* sched_switch_task()
+struct task* __sched_switch_task()
 {
     c_task = NULL;
+    irq_disable_safe(tmp);
     for (size_t i = 0; i <= MAX_PRIORITY; i++) {
         if (!list_empty(&priority_lists[i])) {
             c_task = list_first_entry(&priority_lists[i], struct task, lnode);
@@ -94,6 +98,7 @@ struct task* sched_switch_task()
     if (c_task == NULL) {
         c_task = &idle_task;
     }
+    irq_enable_safe(tmp);
     return c_task;
 }
 
@@ -120,7 +125,7 @@ s32 sys_exit(UNUSED struct sys_regs* params)
 s32 sys_yield(UNUSED struct sys_regs* params)
 {
     BUG_ON_NULL(c_task);
-    sched_switch_task();
+    sched_context_switch();
     return KELT_OK;
 }
 
@@ -130,6 +135,11 @@ void NAKED _do_idle_task()
         asm ("wfi");
     }
     BUG_ON_REACH();
+}
+
+void sched_reschedule()
+{
+    c_task->flags |= TASK_RESCHEDULE_BIT;
 }
 
 void sched_init()
@@ -148,15 +158,12 @@ void sched_init()
 
 void sched_start()
 {
-    sched_switch_task();
-
-    /*
-     * PendSV handler assumes that there is
-     * real task already running, so we need to emulate
-     * CPU behavior on exception entry by pushing out 8 regs saved by Kelt.
-     */
-    c_task->sp += 8 * 4;
-    set_psp((u32)c_task->sp);
-
     sched_enabled = 1;
+    idle_task.ksp = kalloc(TASK_KSTACK_SIZE);
+    __sched_switch_task();
+    c_task->saved_sp = c_task->sp;
+    irq_enable_force();
+    set_msp((u32)c_task->ksp);
+    asm ("svc 0");
+    BUG_ON_REACH();
 }

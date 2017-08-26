@@ -25,7 +25,7 @@ void log_buffer_put(const char* str)
         kring_pos = (kring_pos + 1) & (RING_BUFFER_SIZE - 1);
     }
     spinlock_unlock(&kring_buffer_lock);
-    sched_task_wake_up(_dump_task);
+    // sched_task_wake_up(_dump_task);
 }
 
 size_t bprintu32(char* buf, u32 a, int base) {

@@ -97,7 +97,7 @@ static s32 satisfy_task(struct task* task, struct reactor_event* event, void* cb
     task_reset_stack(task);
 
     /* put event data on task stack */
-    void* ev_addr = task_put_on_stack(task, event->data, event->data_size);
+    void* ev_addr = task_put_on_stack(task, event->data, event->data_size + (4 - event->data_size & 3));
 
     /* prepare stack for context switch */
     struct sys_regs* regs = task_prepare_stack(task);
@@ -211,6 +211,6 @@ s32 sys_finish_event(UNUSED struct sys_regs* regs)
         reactor_event_decref(ev);
         kfree(eq_entry);
     }
-    sched_switch_task();
+    sched_reschedule();
     return err;
 }

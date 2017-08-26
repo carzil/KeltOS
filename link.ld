@@ -1,5 +1,3 @@
-ENTRY(kmain)
-
 MEMORY
 {
     FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 1m
@@ -13,6 +11,11 @@ SECTIONS {
         *(.text*);
         *(.rodata);
     } >FLASH
+
+    .startup_stack (NOLOAD) :
+    {
+        *(.startup_stack*);
+    } >SRAM
 
     .data :
     {

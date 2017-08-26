@@ -9,24 +9,26 @@
 #include "kernel/reactor.h"
 
 enum {
-    MAX_TASKS           = 16,
-    INVALID_PID         = 0,
-    MAX_PRIORITY        = 2,
+    MAX_TASKS               = 16,
+    INVALID_PID             = 0,
+    MAX_PRIORITY            = 2,
 
-    TASK_STATE_BITS     = 0b11,
-    TASK_SLEEPING       = 0b00,
-    TASK_RUNNING        = 0b01,
-    TASK_CRAVING        = 0b10,
+    TASK_STATE_BITS         = 0b11,
+    TASK_SLEEPING           = 0b00,
+    TASK_RUNNING            = 0b01,
+    TASK_CRAVING            = 0b10,
 
-    TASK_PRIORITY_BITS  = 0b1100,
-    PRIORITY_HIGH       = 0b0000,
-    PRIORITY_NORMAL     = 0b0100,
-    PRIORITY_LOW        = 0b1000,
+    TASK_PRIORITY_BITS      = 0b01100,
+    PRIORITY_HIGH           = 0b00000,
+    PRIORITY_NORMAL         = 0b00100,
+    PRIORITY_LOW            = 0b01000,
 };
 
 struct task {
     void* sp;
+    void* saved_sp;
     u32 flags;
+    void* ksp;
 
     void* sp_initial;
     char* name;
@@ -47,7 +49,6 @@ extern void context_switch(struct task* from, struct task* to);
 struct task* sched_start_task(void* start_address, int priority);
 void sched_start();
 void sched_init();
-struct task* sched_switch_task();
 
 s32 sys_exit(struct sys_regs* regs);
 s32 sys_yield(struct sys_regs* regs);
@@ -58,18 +59,23 @@ void sched_switch_in(struct task* task);
 void sched_task_set_sleeping(struct task* task, u32 state);
 void sched_task_wake_up(struct task* task);
 
+struct task* __sched_switch_task();
+void sched_reschedule();
+
 void* task_put_on_stack(struct task* task, void* data, size_t size);
 struct sys_regs* task_prepare_stack(struct task* task);
 
 struct task* sched_create_task(int priority);
 
-#define sched_context_switch() if (sched_enabled) { NVIC_INT_CTRL_REG |= NVIC_PENDSV_SET_BIT; }
+#define sched_context_switch() if (sched_enabled) { NVIC_INT_CTRL_REG |= NVIC_PENDSV_SET_BIT; asm ("isb"); }
 
 #define task_state(task) ((task)->flags & TASK_STATE_BITS)
 #define task_priority(task) ((task)->flags & TASK_PRIORITY_BITS)
+#define task_privileged(task) ((task)->flags & TASK_PRIVILEGED)
 
 #define task_set_state(task, state) ((task)->flags = ((task)->flags & ~(u32)TASK_STATE_BITS) | (state))
 #define task_set_priority(task, priority) ((task)->flags = ((task)->flags & ~(u32)TASK_PRIORITY_BITS) | (priority))
+#define task_set_privileges(task, priv) ((task)->flags = ((task)->flags & ~(u32)TASK_PRIVILEGES_BITS) | (priv))
 
 static inline void task_fill_regs(struct sys_regs* regs, void* addr)
 {

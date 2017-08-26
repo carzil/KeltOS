@@ -1,13 +1,13 @@
 #ifndef _KELT_KERNEL_DEFS_H_
 #define _KELT_KERNEL_DEFS_H_
 
-#define STACK_SIZE          0x2000
-#define SRAM_BASE           0x20000000
+#define STACK_SIZE          0x400
+#define SRAM_START          0x20000000
 #define SRAM_SIZE           (128 * 1024)
-#define STACK_END           (SRAM_BASE + SRAM_SIZE)
-#define STACK_START         (SRAM_BASE + SRAM_SIZE - STACK_START)
+#define SRAM_END            (SRAM_START + SRAM_SIZE)
 
-#define TASK_STACK_SIZE     0x1000
+#define TASK_STACK_SIZE     0x700
+#define TASK_KSTACK_SIZE    0x300
 #define DEFAULT_PSR         (1 << 24)
 
 #define RING_BUFFER_POW     12
@@ -16,6 +16,9 @@
 #define EXC_HANDLER_MAIN    0xfffffff1
 #define EXC_THREAD_MAIN     0xfffffff9
 #define EXC_THREAD_PROCESS  0xfffffffd
+
+#define TASK_RESCHEDULE_BIT 0b010000
+#define TASK_SYSCALL_BIT    0b100000
 
 #define KELT_OK             0
 #define ENOSYS              1
