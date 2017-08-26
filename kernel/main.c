@@ -43,7 +43,6 @@ void kmain(void)
     systick_init();
     printk_init();
 
-    BUG_ON_REACH();
     struct task* tsk = sched_create_task(PRIORITY_NORMAL);
     tsk->name = "test task";
     reactor_watch_for(tsk, id, &test_task);
