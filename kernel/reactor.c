@@ -1,7 +1,7 @@
 #include "sched/sched.h"
 #include "kernel/defs.h"
 #include "kernel/memory.h"
-#include "kernel/bug.h"
+#include "kernel/panic.h"
 #include "kernel/printk.h"
 #include "kernel/alloc.h"
 #include "kernel/reactor.h"

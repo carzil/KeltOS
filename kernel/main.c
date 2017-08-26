@@ -5,7 +5,7 @@
 #include "kernel/memory.h"
 #include "kernel/defs.h"
 #include "kernel/spinlock.h"
-#include "kernel/bug.h"
+#include "kernel/panic.h"
 #include "sched/cpu.h"
 #include "sched/sched.h"
 #include "drivers/systick.h"

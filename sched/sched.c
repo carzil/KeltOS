@@ -3,7 +3,7 @@
 #include "kernel/alloc.h"
 #include "kernel/memory.h"
 #include "kernel/printk.h"
-#include "kernel/bug.h"
+#include "kernel/panic.h"
 #include "drivers/nvic.h"
 #include "kernel/timer.h"
 #include "kernel/syscall.h"

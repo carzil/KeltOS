@@ -1,9 +1,9 @@
 #include "kernel/alloc.h"
 #include "kernel/types.h"
+#include "kernel/panic.h"
 #include "kernel/printk.h"
 #include "kernel/defs.h"
 #include "kernel/memory.h"
-#include "kernel/bug.h"
 
 /*
  * This is implementation of malloc-like memory allocator.
