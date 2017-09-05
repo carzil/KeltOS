@@ -78,14 +78,6 @@ size_t bprintptr(char* buf, void* ptr)
     return bytes + bprintu32(buf + bytes, (u32) ptr, 16);
 }
 
-void printu32(u32 a)
-{
-    char buf[MAX_LEN_U32 + 1];
-    size_t bytes = bprintu32(buf, a, 10);
-    buf[bytes] = '\0';
-    log_buffer_put(buf);
-}
-
 void printk(const char* fmt, ...)
 {
     const char* cursor = fmt;
@@ -95,7 +87,7 @@ void printk(const char* fmt, ...)
     s32 s32value;
     void* ptrvalue;
     char* str;
-    char buf[PRINTK_BUFFER_SIZE];
+    char buf[PRINTK_BUF_SIZE];
     size_t size;
 
     va_start(args, fmt);
