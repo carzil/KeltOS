@@ -8,7 +8,7 @@
 #include "drivers/semihosting.h"
 #include "kernel/timer.h"
 
-enum { MAX_LEN_U32 = 10, MAX_LEN_S32 = 11, MAX_LEN_PTR = 10, MAX_LEN_XU32 = 8 };
+enum { PRINTK_BUF_SIZE = 11 };
 static const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
 static char kring_buffer[RING_BUFFER_SIZE] = { 0 };
@@ -28,7 +28,8 @@ void log_buffer_put(const char* str)
     // sched_task_wake_up(_dump_task);
 }
 
-size_t bprintu32(char* buf, u32 a, int base) {
+size_t bprintu32(char* buf, u32 a, int base)
+{
     size_t i;
     size_t bytes;
 
@@ -48,7 +49,8 @@ size_t bprintu32(char* buf, u32 a, int base) {
     return bytes;
 }
 
-size_t bprints32(char* buf, s32 a, int base) {
+size_t bprints32(char* buf, s32 a, int base)
+{
     if (a < 0) {
         *(buf++) = '-';
         return 1 + bprintu32(buf, -a, base);
@@ -56,7 +58,8 @@ size_t bprints32(char* buf, s32 a, int base) {
     return bprintu32(buf, a, base);
 }
 
-size_t bprintstr(char* buf, const char* str) {
+size_t bprintstr(char* buf, const char* str)
+{
     const char* cur = str;
     size_t length = 0;
     while (*cur) {
@@ -65,7 +68,8 @@ size_t bprintstr(char* buf, const char* str) {
     return length;
 }
 
-size_t bprintptr(char* buf, void* ptr) {
+size_t bprintptr(char* buf, void* ptr)
+{
     size_t bytes;
     if (ptr == NULL) {
         return bprintstr(buf, "(nil)");
@@ -82,54 +86,23 @@ void printu32(u32 a)
     log_buffer_put(buf);
 }
 
-size_t __max_length(const char* fmt) {
-    size_t length = 1; /* Reserved for \0 */
-    const char* cursor = fmt;
-    while (*cursor) {
-        switch (*cursor) {
-        case '%':
-            switch (*(++cursor)) {
-            case 'u':
-                length += MAX_LEN_U32;
-                break;
-            case 'x':
-                length += MAX_LEN_XU32;
-                break;
-            case 'd':
-                length += MAX_LEN_S32;
-                break;
-            case 'p':
-                length += MAX_LEN_PTR;
-                break;
-            default:
-                break;
-            }
-            ++cursor;
-            break;
-        default:
-            ++cursor;
-            ++length;
-            break;
-        }
-    }
-    return length;
-}
-
-void printk(const char* fmt, ...) {
+void printk(const char* fmt, ...)
+{
     const char* cursor = fmt;
     int idle = 1;
     va_list args;
     u32 u32value;
     s32 s32value;
     void* ptrvalue;
-    char buf[__max_length(fmt)];
-    char* b_cursor = buf;
+    char* str;
+    char buf[PRINTK_BUFFER_SIZE];
+    size_t size;
 
     va_start(args, fmt);
     while (*cursor) {
         if (idle) {
             if (*cursor != '%') {
-                *(b_cursor++) = *cursor;
+                smhost_putc(*cursor);
             } else {
                 idle = 0;
             }
@@ -137,35 +110,37 @@ void printk(const char* fmt, ...) {
             switch (*cursor) {
             case 'u':
                 u32value = va_arg(args, u32);
-                b_cursor += bprintu32(b_cursor, u32value, 10);
+                size = bprintu32(buf, u32value, 10);
                 break;
             case 'x':
                 u32value = va_arg(args, u32);
-                b_cursor += bprintu32(b_cursor, u32value, 16);
+                size = bprintu32(buf, u32value, 16);
                 break;
             case 'd':
                 s32value = va_arg(args, s32);
-                b_cursor += bprints32(b_cursor, s32value, 10);
+                size = bprints32(buf, s32value, 10);
                 break;
             case 'p':
                 ptrvalue = va_arg(args, void*);
-                b_cursor += bprintptr(b_cursor, ptrvalue);
+                size = bprintptr(buf, ptrvalue);
+                break;
+            case 's':
+                str = va_arg(args, char*);
+                smhost_printz(str);
+                size = 0;
                 break;
             default:
+                size = 0;
                 break;
+            }
+            if (size) {
+                smhost_print(buf, size);
             }
             idle = 1;
         }
         ++cursor;
     }
     va_end(args);
-
-    *b_cursor = '\0';
-    log_buffer_put(buf);
-
-#ifdef DEBUG
-    smhost_printz(buf);
-#endif
 }
 
 void dump_kernel_log_task()
