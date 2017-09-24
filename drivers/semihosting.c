@@ -28,6 +28,11 @@ u32 smhost_open(const char* fname, u32 fname_size, u32 mode)
     return smhost_gateway(SMHOST_OPEN, smhost_req);
 }
 
+u32 smhost_putc(char value)
+{
+    return smhost_gateway(SMHOST_WRITEC, (void*)&value);
+}
+
 u32 smhost_print(const char* buf, u32 size)
 {
     u32 smhost_req[3] = {
