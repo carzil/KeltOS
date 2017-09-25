@@ -12,6 +12,14 @@
 #include "drivers/semihosting.h"
 #include "kernel/reactor.h"
 
+static const char* LOGO = 
+"\n"
+" _  __    _ _      ___  ____  \n"
+"| |/ /___| | |_   / _ \\/ ___| \n"
+"| ' // _ | | __| | | | \\___ \\ \n"
+"| . |  __| | |_  | |_| |___) |\n"
+"|_|\\_\\___|_|\\__|  \\___/|____/ \n";
+
 void load_sections()
 {
     kmemcpy(&_data_start, &_data_load, (u32)&_data_end - (u32)&_data_start);
@@ -43,6 +51,7 @@ void kmain(void)
     systick_init();
     printk_init();
 
+    printk(LOGO);
     struct task* tsk = sched_create_task(PRIORITY_NORMAL);
     tsk->name = "test task";
     reactor_watch_for(tsk, id, &test_task);
